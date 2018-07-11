@@ -1,0 +1,104 @@
+// Copyright 2009 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package ps
+
+type Rat struct {
+	num, den int64 // numerator, denominator
+}
+
+type item interface {
+	pr()
+	eq(c item) bool
+}
+
+func (u *Rat) pr() {
+	if u.den == 1 {
+		print(u.num)
+	} else {
+		print(u.num, "/", u.den)
+	}
+	print(" ")
+}
+
+func (u *Rat) eq(c item) bool {
+	c1 := c.(*Rat)
+	return u.num == c1.num && u.den == c1.den
+}
+
+// Integer gcd; needed for rational arithmetic
+
+func gcd(u, v int64) int64 {
+	if u < 0 {
+		return gcd(-u, v)
+	}
+	if u == 0 {
+		return v
+	}
+	return gcd(v%u, u)
+}
+
+// Make a rational from two ints and from one int
+
+func i2tor(u, v int64) *Rat {
+	g := gcd(u, v)
+	r := new(rat)
+	if v > 0 {
+		r.num = u / g
+		r.den = v / g
+	} else {
+		r.num = -u / g
+		r.den = -v / g
+	}
+	return r
+}
+
+func itor(u int64) *Rat {
+	return i2tor(u, 1)
+}
+
+var zero *Rat
+var one *Rat
+
+// End mark and end test
+
+var finis *Rat
+
+func end(u *Rat) int64 {
+	if u.den == 0 {
+		return 1
+	}
+	return 0
+}
+
+// Operations on rationals
+
+func add(u, v *Rat) *Rat {
+	g := gcd(u.den, v.den)
+	return i2tor(u.num*(v.den/g)+v.num*(u.den/g), u.den*(v.den/g))
+}
+
+func mul(u, v *Rat) *Rat {
+	g1 := gcd(u.num, v.den)
+	g2 := gcd(u.den, v.num)
+	r := new(rat)
+	r.num = (u.num / g1) * (v.num / g2)
+	r.den = (u.den / g2) * (v.den / g1)
+	return r
+}
+
+func neg(u *Rat) *Rat {
+	return i2tor(-u.num, u.den)
+}
+
+func sub(u, v *Rat) *Rat {
+	return add(u, neg(v))
+}
+
+func Inv(u *Rat) *Rat { // invert a rat
+	if u.num == 0 {
+		panic("zero divide in inv")
+	}
+	return i2tor(u.den, u.num)
+}
