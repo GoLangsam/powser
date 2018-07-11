@@ -22,10 +22,17 @@ func NewCoefficient(a, b int64) Coefficient {
 	return big.NewRat(a, b)
 }
 
-// integer represents the result of r.Nom() & r.Denum()
-type integer = int64
+// Eq discriminates iff x is equal to y.
+func Eq(x, y Coefficient) bool {
+	return x.Num() == y.Num() && x.Denom() == y.Denom()
+	// return x.Cmp(y) == 0
+}
 
-func isZero(x integer) bool {
+// Integer represents the result of r.Nom() & r.Denum().
+type Integer = int64
+
+// IsZero discriminates iff x is equal to zero.
+func IsZero(x Integer) bool {
 	return x == 0
 	// return x.Cmp(big.NewInt(0)) == 0
 }
@@ -36,12 +43,9 @@ type PS struct {
 	*dch.Dch
 }
 
-// NewPS returns a fresh power series.
-func NewPS() PS {
+// New returns a fresh power series.
+func New() PS {
 	return PS{dch.New()}
 }
-
-// PS2 represents a pair of power series.
-type PS2 [2]PS
 
 // ===========================================================================

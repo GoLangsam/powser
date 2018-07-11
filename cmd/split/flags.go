@@ -2,34 +2,27 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Test concurrency primitives: power series.
-
 package main
 
 import (
-	"fmt"
-	"os"
-	"time"
+	"flag"
 )
 
 // ===========================================================================
 
-func main() {
+var ( //flags
+	n int
+	x bool
 
-	if n > 0 {
-		sample(n)
-	} else {
-		for i := 1; i <= max; i++ {
-			sample(i)
-		}
-	}
+	cn, cd int64
+)
 
-	if x {
-		fmt.Println("about to leave ...")
-		<-time.After(time.Millisecond * 100)
-		os.Exit(1) // to see leaking goroutines, if any
-	}
-
+func init() {
+	flag.IntVar(&n, "n", 0, "# of sample: 0 = all")
+	flag.BoolVar(&x, "x", true, "use os.Exit(1) to see leaking goroutines, if any")
+	flag.Int64Var(&cn, "cn", 1, "Coefficient: Numerator")
+	flag.Int64Var(&cd, "cd", 1, "Coefficient: Denominator")
+	flag.Parse()
 }
 
 // ===========================================================================

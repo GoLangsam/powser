@@ -17,44 +17,24 @@ package ps
 // series flow. They start an encapsulated generator that
 // puts the terms of the series on the channel.
 
-// Ones are 1 1 1 1 1 ... = `1/(1-x)` with a simple pole at `x=1`.
-func Ones() PS {
-	return AdInfinitum(NewCoefficient(1, 1))
-}
-
-// Twos are 2 2 2 2 2 ... just for samples.
-func Twos() PS {
-	return AdInfinitum(NewCoefficient(2, 1))
-}
-
-// AdInfinitum repeates coefficient `c` ad infinitum
-// and returns `c^i`.
-func AdInfinitum(c Coefficient) PS {
-	Z := NewPS()
-	go func(Z PS, c Coefficient) {
-		defer Z.Close()
-		for Z.Next() {
-			Z.Send(c)
-		}
-	}(Z, c)
-	return Z
-}
-
 // the Monomial of the coefficient
 // returns `c * x^n`.
 func Monomial(c Coefficient, n int) PS {
-	Z := NewPS()
+	Z := New()
 	go func(Z PS, c Coefficient, n int) {
 		defer Z.Close()
 
-		if !isZero(c.Num()) {
-			for ; n > 0; n-- {
-				if !Z.Put(aZero) {
-					return
-				}
-			}
-			Z.Put(c)
+		if IsZero(c.Num()) {
+			return
 		}
+
+		for ; n > 0; n-- { // n-1 times aZero
+			if !Z.Put(aZero()) {
+				return
+			}
+		}
+		Z.Put(c) // `c * x^n`
+
 	}(Z, c, n)
 	return Z
 }
@@ -62,19 +42,18 @@ func Monomial(c Coefficient, n int) PS {
 // the Binomial theorem is applied to the coefficient
 // and returns `(1+x)^c`.
 func Binomial(c Coefficient) PS {
-	Z := NewPS()
+	Z := New()
 	go func(Z PS, c Coefficient) {
 		defer Z.Close()
 
-		n := 1
-		t := aOne
-		for !isZero(c.Num()) {
-			if !Z.Put(t) {
+		i, iZ := 1, aOne() // `1`, `1/1`
+		for !IsZero(c.Num()) {
+			if !Z.Put(iZ) {
 				return
 			}
-			t.Mul(t.Mul(t, c), rat1byI(n))
-			c.Sub(c, aOne)
-			n++
+			iZ.Mul(iZ, aC().Mul(c, rat1byI(i))) // `iZ = iZ * c * 1/i`
+			c.Sub(c, aOne())                    // `c = c-1`
+			i++
 		}
 	}(Z, c)
 	return Z
@@ -83,16 +62,17 @@ func Binomial(c Coefficient) PS {
 // Polynom converts coefficients, constant term `c` first,
 // to a (finite) power series, the polynom in the coefficients.
 func Polynom(a ...Coefficient) PS {
-	Z := NewPS()
+	Z := New()
 	go func(Z PS, a ...Coefficient) {
 		defer Z.Close()
 
 		j := 0
 		for j = len(a); j > 0; j-- {
-			if !isZero(a[j-1].Num()) { // remove trailing zeros
+			if !IsZero(a[j-1].Num()) { // remove trailing zeros
 				break
 			}
 		}
+
 		for i := 0; i < j; i++ {
 			if !Z.Put(a[i]) {
 				return

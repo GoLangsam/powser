@@ -4,66 +4,89 @@
 
 // Test concurrency primitives: power series.
 
-package ps
+package ps_test
 
 import (
-	"fmt"
+	"testing"
+
+	. "github.com/GoLangsam/powser"
 )
 
-// eq discriminates iff x is equal to y.
-func eq(x, y Coefficient) bool {
-	return x.Num() == y.Num() && y.Denom() == y.Denom()
+// Ones are 1 1 1 1 1 ... = `1/(1-x)` with a simple pole at `x=1`.
+func Ones() PS {
+	return AdInfinitum(NewCoefficient(1, 1))
 }
 
-func check(U PS, c Coefficient, count int, str string) {
+// Twos are 2 2 2 2 2 ... just for samples.
+func Twos() PS {
+	return AdInfinitum(NewCoefficient(2, 1))
+}
+
+// AdInfinitum repeates coefficient `c` ad infinitum
+// and returns `c^i`.
+func AdInfinitum(c Coefficient) PS {
+	Z := New()
+	go func(Z PS, c Coefficient) {
+		defer Z.Close()
+		for Z.Next() {
+			Z.Send(c)
+		}
+	}(Z, c)
+	return Z
+}
+
+func check(t *testing.T, U PS, c Coefficient, count int, str string) {
+
 	for i := 0; i < count; i++ {
-		r, _ := U.Get()
-		if !eq(r, c) {
-			fmt.Print("got: ")
-			fmt.Print(r.String())
-			fmt.Print("should get ")
-			fmt.Print(c.String())
-			fmt.Print("\n")
-			panic(str)
+
+		if r, ok := U.Get(); ok {
+			if !Eq(r, c) {
+				t.Error("got: ", r.String(), "\t should get ", c.String(), "\t ", str)
+			}
 		}
 	}
 }
 
 const N = 10
 
-func checka(U PS, a []Coefficient, str string) {
-	for i := 0; i < N; i++ {
-		check(U, a[i], 1, str)
+func checka(t *testing.T, U PS, a []Coefficient, str string) {
+	for i := 0; i < len(a); i++ {
+		check(t, U, a[i], 1, str)
 	}
 }
 
-func Example() {
+func TestPS(t *testing.T) {
 
-	check(Ones(), aOne, 5, "Ones()")
-	check(Add(Ones(), Ones()), aTwo, 0, "Add Ones() Ones()")                 // 1 1 1 1 1
-	check(Add(Ones(), Twos()), NewCoefficient(3, 1), 0, "Add Ones() Twos()") // 3 3 3 3 3
+	check(t, Ones(), aOne(), 5, "Ones()")
+	check(t, Add(Ones(), Ones()), NewCoefficient(2, 1), 5, "Add Ones() Ones()") // 1 1 1 1 1
+	check(t, Add(Ones(), Twos()), NewCoefficient(3, 1), 5, "Add Ones() Twos()") // 3 3 3 3 3
+
 	a := make([]Coefficient, N)
 	d := Ones().Deriv()
 	for i := 0; i < N; i++ {
-		a[i] = NewCoefficient(int64(i+1), 1)
+		a[i] = ratIby1(i + 1)
 	}
-	checka(d, a, "Diff") // 1 2 3 4 5
-	in := Ones().Integ(aZero)
-	a[0] = aZero // integration constant
+	checka(t, d, a, "Deriv") // 1 2 3 4 5
+
+	in := Ones().Integ(aZero())
+	a[0] = aZero() // integration constant
 	for i := 1; i < N; i++ {
-		a[i] = NewCoefficient(1, int64(i))
+		a[i] = rat1byI(i)
 	}
-	checka(in, a, "Integ")                                           // 0 1 1/2 1/3 1/4 1/5
-	check(Twos().Cmul(aMinusOne), NewCoefficient(-2, 1), 10, "CMul") // -1 -1 -1 -1 -1
-	check(Ones().Minus(Twos()), aMinusOne, 0, "Sub Ones() Twos()")   // -1 -1 -1 -1 -1
+	checka(t, in, a, "Integ") // 0 1 1/2 1/3 1/4 1/5
+
+	check(t, Twos().CMul(aMinusOne()), NewCoefficient(-2, 1), 10, "CMul") // -1 -1 -1 -1 -1
+	check(t, Ones().Minus(Twos()), aMinusOne(), 5, "Sub Ones() Twos()")   // -1 -1 -1 -1 -1
+
 	m := Mul(Ones(), Ones())
 	for i := 0; i < N; i++ {
-		a[i] = NewCoefficient(int64(i+1), 1)
+		a[i] = ratIby1(i + 1)
 	}
-	checka(m, a, "Mul") // 1 2 3 4 5
+	checka(t, m, a, "Mul") // 1 2 3 4 5
+
 	e := Ones().Exp()
-	a[0] = aOne
-	a[1] = aOne
+	a[0] = aOne()
+	a[1] = aOne()
 	a[2] = NewCoefficient(3, 2)
 	a[3] = NewCoefficient(13, 6)
 	a[4] = NewCoefficient(73, 24)
@@ -72,29 +95,31 @@ func Example() {
 	a[7] = NewCoefficient(37633, 5040)
 	a[8] = NewCoefficient(43817, 4480)
 	a[9] = NewCoefficient(4596553, 362880)
-	checka(e, a, "Exp") // 1 1 3/2 13/6 73/24
-	at := Ones().MonSubst(aMinusOne, 2).Integ(aZero)
+	checka(t, e, a, "Exp") // 1 1 3/2 13/6 73/24
+
+	at := Ones().MonSubst(aMinusOne(), 2).Integ(aZero())
 	for c, i := 1, 0; i < N; i++ {
 		if i%2 == 0 {
-			a[i] = aZero
+			a[i] = aZero()
 		} else {
 			a[i] = NewCoefficient(int64(c), int64(i))
 			c *= -1
 		}
 	}
-	checka(at, a, "ATan") // 0 -1 0 -1/3 0 -1/5
+	checka(t, at, a, "ATan") // 0 1 0 -1/3 0 1/5 0 -1/7 0 1/9 0 -1/11
+
 	/*
-		t := Revert(Ones().MonSubst(aMinusOne, 2).Integ(aZero))
-		a[0] = aZero
-		a[1] = aOne
-		a[2] = aZero
+		t := Revert(Ones().MonSubst(aMinusOne(), 2).Integ(aZero()))
+		a[0] = aZero()
+		a[1] = aOne()
+		a[2] = aZero()
 		a[3] = NewCoefficient(1,3)
-		a[4] = aZero
+		a[4] = aZero()
 		a[5] = NewCoefficient(2,15)
-		a[6] = aZero
+		a[6] = aZero()
 		a[7] = NewCoefficient(17,315)
-		a[8] = aZero
+		a[8] = aZero()
 		a[9] = NewCoefficient(62,2835)
-		checka(t, a, "Tan")  // 0 1 0 1/3 0 2/15
+		checka(t, t, a, "Tan")  // 0 1 0 1/3 0 2/15
 	*/
 }

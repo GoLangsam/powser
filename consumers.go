@@ -13,24 +13,24 @@ package ps
 // Input variables: U,V,...
 // Output variables: ...,Y,Z
 
-// Eval n terms of power series `U` at `x=c`.
-func (U PS) Eval(c Coefficient, n int) Coefficient {
-	if n == 0 {
+// EvalAt evaluates a power series at `x=c`
+// for up to `n` terms.
+func (U PS) EvalAt(c Coefficient, n int) Coefficient {
+	u, ok := U.Get()
+	switch {
+	case ok && n == 1:
+		return u
+	case ok && n > 1:
+		return aC().Add(u, aC().Mul(c, U.EvalAt(c, n-1))) // `u + c*U`
+	default:
 		U.Drop()
-		return aZero
+		return aZero()
 	}
-
-	var u Coefficient
-	var ok bool
-	if u, ok = U.Get(); !ok {
-		U.Drop()
-		return aZero
-	}
-	return u.Add(u, c.Mul(c, U.Eval(c, n-1)))
 }
 
-// Evaln evaluates PS at `x=c` to n terms in floating point.
-func (U PS) Evaln(c Coefficient, n int) float64 {
+// EvalN evaluates a power series at `x=c`
+// for up to `n` terms in floating point.
+func (U PS) EvalN(c Coefficient, n int) float64 {
 	defer U.Drop()
 
 	ci := float64(1)
@@ -51,7 +51,7 @@ func (U PS) Evaln(c Coefficient, n int) float64 {
 	return val
 }
 
-// Printn prints n terms of a power series.
+// Printn prints up to n terms of a power series.
 func (U PS) Printn(n int) {
 	defer U.Drop()
 	defer print(("\n"))
@@ -67,7 +67,19 @@ func (U PS) Printn(n int) {
 	}
 }
 
-// Print one billion terms.
+// Printer returns a copy of `U`,
+// and concurrently prints up to n terms of it.
+// Useful to inspect formulas.
+func (U PS) Printer(n int) PS {
+	UU := U.Split()
+
+	go func(U PS, n int) {
+		U.Printn(n)
+	}(U, n)
+	return UU[1]
+}
+
+// Print one billion terms. Use at Your own risk ;-)
 func (U PS) Print() {
 	U.Printn(1000000000)
 }
