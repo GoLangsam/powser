@@ -17,14 +17,13 @@ package ps
 // series flow. They start an encapsulated generator that
 // puts the terms of the series on the channel.
 
-// the Monomial of the coefficient
-// returns `c * x^n`.
+// Monomial returns `c * x^n`.
 func Monomial(c Coefficient, n int) PS {
 	Z := New()
 	go func(Z PS, c Coefficient, n int) {
 		defer Z.Close()
 
-		if IsZero(c.Num()) {
+		if IsZero(c) {
 			return
 		}
 
@@ -39,15 +38,16 @@ func Monomial(c Coefficient, n int) PS {
 	return Z
 }
 
-// the Binomial theorem is applied to the coefficient
-// and returns `(1+x)^c`.
+// Binomial returns `(1+x)^c`,
+// a finite polynom iff `c` is a positive
+// and an alternating infinite power series otherwise.
 func Binomial(c Coefficient) PS {
 	Z := New()
 	go func(Z PS, c Coefficient) {
 		defer Z.Close()
 
 		i, iZ := 1, aOne() // `1`, `1/1`
-		for !IsZero(c.Num()) {
+		for !IsZero(c) {
 			if !Z.Put(iZ) {
 				return
 			}
@@ -68,7 +68,7 @@ func Polynom(a ...Coefficient) PS {
 
 		j := 0
 		for j = len(a); j > 0; j-- {
-			if !IsZero(a[j-1].Num()) { // remove trailing zeros
+			if !IsZero(a[j-1]) { // remove trailing zeros
 				break
 			}
 		}

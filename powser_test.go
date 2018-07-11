@@ -40,7 +40,7 @@ func check(t *testing.T, U PS, c Coefficient, count int, str string) {
 	for i := 0; i < count; i++ {
 
 		if r, ok := U.Get(); ok {
-			if !Eq(r, c) {
+			if !Equal(r, c) {
 				t.Error("got: ", r.String(), "\t should get ", c.String(), "\t ", str)
 			}
 		}
@@ -58,8 +58,8 @@ func checka(t *testing.T, U PS, a []Coefficient, str string) {
 func TestPS(t *testing.T) {
 
 	check(t, Ones(), aOne(), 5, "Ones()")
-	check(t, Add(Ones(), Ones()), NewCoefficient(2, 1), 5, "Add Ones() Ones()") // 1 1 1 1 1
-	check(t, Add(Ones(), Twos()), NewCoefficient(3, 1), 5, "Add Ones() Twos()") // 3 3 3 3 3
+	check(t, Ones().Plus(Ones()), NewCoefficient(2, 1), 5, "Add Ones() Ones()") // 1 1 1 1 1
+	check(t, Ones().Plus(Twos()), NewCoefficient(3, 1), 5, "Add Ones() Twos()") // 3 3 3 3 3
 
 	a := make([]Coefficient, N)
 	d := Ones().Deriv()
@@ -76,9 +76,9 @@ func TestPS(t *testing.T) {
 	checka(t, in, a, "Integ") // 0 1 1/2 1/3 1/4 1/5
 
 	check(t, Twos().CMul(aMinusOne()), NewCoefficient(-2, 1), 10, "CMul") // -1 -1 -1 -1 -1
-	check(t, Ones().Minus(Twos()), aMinusOne(), 5, "Sub Ones() Twos()")   // -1 -1 -1 -1 -1
+	check(t, Ones().Less(Twos()), aMinusOne(), 5, "Sub Ones() Twos()")    // -1 -1 -1 -1 -1
 
-	m := Mul(Ones(), Ones())
+	m := Ones().Times(Ones())
 	for i := 0; i < N; i++ {
 		a[i] = ratIby1(i + 1)
 	}

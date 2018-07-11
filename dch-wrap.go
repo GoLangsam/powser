@@ -5,12 +5,9 @@
 package ps
 
 // ===========================================================================
-
-// GetNextFrom `From` for `Into` and report success.
-// Follow with `Into.Send( f(c) )`, iff ok.
-func (Into PS) GetNextFrom(From PS) (c Coefficient, ok bool) {
-	return Into.MyDch().GetNextFrom(From.MyDch())
-}
+// Wrappers for multi-argument methods
+// use dch.MyDchInto() and dch.MyDchFrom() to obtain the anonymously embedded value
+// and invoke its underlying method.
 
 // Append all coefficients from `From` into `Into`.
 func (Into PS) Append(From PS) {
@@ -23,16 +20,10 @@ func (Into PS) append(From PS) {
 	Into.MyDch().AppendOnly(From.MyDch())
 }
 
-// Split returns a pair of power series identical to (the current remainder of) a given power series.
-func (U PS) Split() [2]PS {
-	UU := U.pair()
-	U.MyDch().SplitUs(UU[0].MyDch(), UU[1].MyDch())
-	return UU
-}
-
-// Split `inp` into a given pair of power series.
-func (out pairPS) Split(inp PS) {
-	inp.MyDch().SplitUs(out[0].MyDch(), out[1].MyDch())
+// GetNextFrom `From` for `Into` and report success.
+// Follow with `Into.Send( f(c) )`, iff ok.
+func (Into PS) GetNextFrom(From PS) (c Coefficient, ok bool) {
+	return Into.MyDch().GetNextFrom(From.MyDch())
 }
 
 // GetWith returns each first value received from the two given power series
@@ -47,6 +38,28 @@ func (U PS) GetWith(V PS) (cU Coefficient, okU bool, cV Coefficient, okV bool) {
 	}
 
 	return
+}
+
+// Split returns a pair of power series identical to (the current remainder of) a given power series.
+func (U PS) Split() [2]PS {
+	UU := U.newPair()
+	U.MyDch().SplitUs(UU[0].MyDch(), UU[1].MyDch())
+	return UU
+}
+
+// ---------------------------------------------------------------------------
+
+// pairPS represents a pair of power series.
+type pairPS [2]PS
+
+// pair returns an empty pair of new power series.
+func (U PS) newPair() pairPS {
+	return pairPS{New(), New()}
+}
+
+// Split `From` into a given pair of power series.
+func (UU pairPS) Split(From PS) {
+	From.MyDch().SplitUs(UU[0].MyDch(), UU[1].MyDch())
 }
 
 // ===========================================================================

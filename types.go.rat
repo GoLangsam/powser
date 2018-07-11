@@ -14,27 +14,32 @@ import (
 
 // ===========================================================================
 
-// Coefficient of a power series - a rational number.
+// Coefficient of a power series - a rational number in this case.
+//
+//  Note: Coefficients just need to provide:
+//  `Add(a, b)` as commutative and associative addition with `aZero` as neutral element,
+//  `Sub(a, b)` as substraction, and `Neg(a)` as convenience for `-a` (so `Add(a, Neg(a)) == aZero`),
+//  `Mul(a, b)` as commutative and associative multiplication with `aOne` as neutral element,
+//  `Inv(a)` as the inverse of multiplication `1/a` (for `a` not == aZero).
+//  `Equal(a, b)` to discriminate iff `a` is equal to `b`.
+//  `IsZero(a)` to discriminate iff coefficient `a` is equal to zero.
 type Coefficient = *big.Rat
 
-// NewCoefficient returns a new coefficient `a/b`.
+// NewCoefficient returns a new coefficient: the rational `a/b`.
 func NewCoefficient(a, b int64) Coefficient {
 	return big.NewRat(a, b)
 }
 
-// Eq discriminates iff x is equal to y.
-func Eq(x, y Coefficient) bool {
-	return x.Num() == y.Num() && x.Denom() == y.Denom()
-	// return x.Cmp(y) == 0
+// IsZero discriminates iff coefficient `c` is equal to zero.
+func IsZero(c Coefficient) bool {
+	return c.Num() == 0
+	// return c.Num().Cmp(big.NewInt(0)) == 0
 }
 
-// Integer represents the result of r.Nom() & r.Denum().
-type Integer = int64
-
-// IsZero discriminates iff x is equal to zero.
-func IsZero(x Integer) bool {
-	return x == 0
-	// return x.Cmp(big.NewInt(0)) == 0
+// Equal discriminates iff coefficient `a` is equal to `b`.
+func Equal(a, b Coefficient) bool {
+	return a.Num() == b.Num() && a.Denom() == b.Denom()
+	// return a.Cmp(b) == 0
 }
 
 // PS represents a power series as a demand channel

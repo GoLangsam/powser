@@ -18,13 +18,10 @@ func (U PS) New() PS {
 	return New()
 }
 
-// pairPS represents a pair of power series.
-type pairPS [2]PS
-
-// pair returns an empty pair of new power series.
-func (U PS) pair() pairPS {
-	return pairPS{New(), New()}
-}
+// ---------------------------------------------------------------------------
+// Closure functions on some coefficient math - for convenient use with SendCfnFrom
+// Note: Its used where it helps to tighten the implementation of an algorithm,
+// and intentionally calculations are done directly and explicit in other places.
 
 // cSame `u`
 func cSame() func(u Coefficient) Coefficient {

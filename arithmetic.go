@@ -216,7 +216,7 @@ func (U PS) Recip() PS {
 		}
 		Z.Send(aC().Inv(u)) // `1/u`
 		mu := aC().Neg(u)   // `-z` minus z
-		ZZ := U.pair()
+		ZZ := U.newPair()
 		ZZ.Split(Mul(U.CMul(mu), ZZ[0].Shift(u)))
 		Z.Append(ZZ[1])
 	}(U, Z)
@@ -230,7 +230,7 @@ func (U PS) Recip() PS {
 //	integrate to get Z
 // Note: The constant term is simply ignored.
 func (U PS) Exp() PS {
-	ZZ := U.pair()
+	ZZ := U.newPair()
 	ZZ.Split(Mul(ZZ[0], U.Deriv()).Integ(aOne()))
 	return ZZ[1]
 }
