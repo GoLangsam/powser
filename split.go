@@ -4,7 +4,7 @@
 
 package ps
 
-// Split reads a single demand channel and replicates its
+// split reads a single demand channel and replicates its
 // output onto two, which may be read at different rates.
 // A process is created at first demand and dies
 // after the data has been sent to both outputs.
@@ -18,43 +18,46 @@ package ps
 // a signal on the release-wait channel tells the next newer
 // generation to begin servicing out[1].
 //
-func (out PS2) split(in PS) {
-	release := make(chan struct{})
-	go out.dosplit(in, release)
-	release <- struct{}{}
-}
-
-func (out PS2) dosplit(in PS, wait <-chan struct{}) {
+func split(out1, out2, inp PS, wait <-chan struct{}) {
 	both := false // do not service both channels
 
-	reqI, datI := in.From()
-	req0, dat0 := out[0].Into()
-	req1, dat1 := out[1].Into()
+	req1, _ := out1.Into()
+	req2, _ := out2.Into()
+
+	var req bool // got request?
 
 	select {
-	case <-req0:
+	case _, req = <-req1:
 
 	case <-wait:
 		both = true
 		select {
-		case <-req0:
+		case _, req = <-req1:
 
-		case <-req1: // swap
-			out[0], out[1] = out[1], out[0]
-			req0, req1 = req1, req0
-			dat0, dat1 = dat1, dat0
+		case _, req = <-req2: // swap
+			out1, out2 = out2, out1
+			req1, req2 = req2, req1
 		}
 	}
 
-	reqI <- struct{}{}
-	release := make(chan struct{})
-	go out.dosplit(in, release)
-	dat := <-datI
-	dat0 <- dat
-	if !both {
-		<-wait
+	if dat, ok := inp.Get(); ok {
+		release := make(chan struct{})
+		go split(out1, out2, inp, release)
+
+		if req {
+			out1.Send(dat)
+		}
+		if !both {
+			<-wait
+		}
+		if out2.Next() {
+			out2.Send(dat)
+		}
+
+		close(release)
+
+	} else {
+		out1.Close()
+		out2.Close()
 	}
-	<-req1
-	dat1 <- dat
-	release <- struct{}{}
 }

@@ -35,30 +35,30 @@ func (U PS) Print() {
 // ===========================================================================
 // Helpers
 
-// split returns a pair of power series identical to a given power series
-func (U PS) split() PS2 {
-	UU := NewPS2()
-	go UU.split(U)
-	return UU
+// New returns a fresh power series.
+func (U PS) New() PS {
+	return NewPS()
 }
 
-// Append the coefficient from `from` to `U`.
+// NewPair returns an empty pair of new power series.
+func (U PS) NewPair() PS2 {
+	return PS2{NewPS(), NewPS()}
+}
+
+// Append the coefficient from `Z` to `U`.
 func (U PS) Append(Z PS) {
 
-	var c Coefficient
+	var u Coefficient
 	var ok bool
-	for {
-		if !U.Req() {
+	for U.Next() {
+		if u, ok = Z.Get(); !ok {
 			return
 		}
-		if c, ok = Z.Get(); !ok {
-			return
-		}
-		U.Snd(c)
+		U.Send(u)
 	}
 }
 
-// Eval n terms of power series U at x=c
+// Eval n terms of power series `U` at `x=c`.
 func (U PS) Eval(c Coefficient, n int) Coefficient {
 	if n == 0 {
 		return aZero
@@ -74,18 +74,20 @@ func (U PS) Eval(c Coefficient, n int) Coefficient {
 
 // Evaln evaluates PS at `x=c` to n terms in floating point.
 func (U PS) Evaln(c Coefficient, n int) float64 {
-	xn := float64(1)
-	x := asFloat64(c.Num()) / asFloat64(c.Denom())
+	ci := float64(1)
+	fc, _ := c.Float64()
 	val := float64(0)
 
 	var u Coefficient
+	var fu float64
 	var ok bool
 	for i := 0; i < n; i++ {
 		if u, ok = U.Get(); !ok {
 			break
 		}
-		val = val + x*asFloat64(u.Num())/asFloat64(u.Denom())
-		xn = xn * x
+		fu, _ = u.Float64()
+		val += fu * ci // val += `u(i) * c^i`
+		ci = fc * ci   // `c^(i+1) = c * c^i`
 	}
 	return val
 }

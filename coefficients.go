@@ -8,17 +8,17 @@ package ps
 // special rational coefficients
 
 var (
-	aZero     Coefficient
-	aOne      Coefficient
-	aTwo      Coefficient
-	aMinusOne Coefficient
+	aZero     Coefficient // 0
+	aOne      Coefficient // 1
+	aTwo      Coefficient // 2
+	aMinusOne Coefficient // -1
 )
 
 func init() {
-	aZero = NewCoefficient(0, 1)
-	aOne = NewCoefficient(1, 1)
-	aTwo = NewCoefficient(2, 1)
-	aMinusOne = NewCoefficient(-1, 1) // aMinusOne.Neg(aOne) raises `nil` exception ?!?
+	aZero = NewCoefficient(0, 1)      // 0
+	aOne = NewCoefficient(1, 1)       // 1
+	aTwo = NewCoefficient(2, 1)       // 2
+	aMinusOne = NewCoefficient(-1, 1) // -1 - aMinusOne.Neg(aOne) raises `nil` exception ?!?
 }
 
 // ratI creates a new Rat `i/1` from int `i`.

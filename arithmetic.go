@@ -13,24 +13,55 @@ package ps
 // Input variables: U,V,...
 // Output variables: ...,Y,Z
 
+// clone returns a new powerseries to receive values from `U`.
+func (U PS) clone() PS {
+	Z := U.New()
+	go func(U, Z PS) {
+		defer func() {
+			U.Drop()
+			Z.Close()
+		}()
+		Z.Append(U)
+	}(U, Z)
+	return Z
+}
+
+// split returns a pair of power series identical to a given power series.
+func (U PS) split() PS2 {
+	UU := U.NewPair()
+	UU.split(U)
+	return UU
+}
+
+// split inp into a given pair of power series.
+func (out PS2) split(in PS) {
+	release := make(chan struct{})
+	go split(out[0], out[1], in, release)
+	close(release)
+}
+
 // Add two power series.
 func Add(U, V PS) PS {
 	Z := NewPS()
 	go func(U, V, Z PS) {
-		defer Z.Close()
+		defer func() {
+			U.Drop()
+			V.Drop()
+			Z.Close()
+		}()
 
 		var u, v Coefficient
 		var uok, vok bool
-		for Z.Req() {
+		for Z.Next() {
 			u, uok, v, vok = get2(U, V)
 			switch { // fini(u) + 2*fini(v) {
 			case uok && vok:
-				Z.Snd(u.Add(u, v))
+				Z.Send(u.Add(u, v))
 			case uok:
-				Z.Snd(u)
+				Z.Send(u)
 				Z.Append(U)
 			case vok:
-				Z.Snd(v)
+				Z.Send(v)
 				Z.Append(V)
 			default:
 				return
@@ -55,17 +86,20 @@ func (U PS) Plus(V ...PS) PS {
 
 // Cmul multiplies a power series by a constant
 func (U PS) Cmul(c Coefficient) PS {
-	Z := NewPS()
+	Z := U.New()
 	go func(c Coefficient, U, Z PS) {
-		defer Z.Close()
+		defer func() {
+			U.Drop()
+			Z.Close()
+		}()
 
 		var u Coefficient
 		var ok bool
-		for Z.Req() {
+		for Z.Next() {
 			if u, ok = U.Get(); !ok {
 				return
 			}
-			Z.Snd(u.Mul(c, u))
+			Z.Send(u.Mul(c, u))
 		}
 	}(c, U, Z)
 	return Z
@@ -93,8 +127,11 @@ func (U PS) Less(V ...PS) PS {
 // Monmul multiplies `U` by the monomial "x^n"
 // and returns `x^n * U`.
 func (U PS) Monmul(n int) PS {
-	Z := NewPS()
+	Z := U.New()
 	go func(n int, U PS, Z PS) {
+		defer func() {
+			U.Drop()
+		}()
 		for ; n > 0; n-- {
 			Z.Put(aZero)
 		}
@@ -111,8 +148,12 @@ func (U PS) Xmul() PS {
 
 // Shift
 func (U PS) Shift(c Coefficient) PS {
-	Z := NewPS()
+	Z := U.New()
 	go func(c Coefficient, U, Z PS) {
+		defer func() {
+			U.Drop()
+			Z.Close()
+		}()
 		Z.Put(c)
 		Z.Append(U)
 	}(c, U, Z)
@@ -128,9 +169,13 @@ func (U PS) Shift(c Coefficient) PS {
 func Mul(U, V PS) PS {
 	Z := NewPS()
 	go func(U, V, Z PS) {
-		defer Z.Close()
+		defer func() {
+			U.Drop()
+			V.Drop()
+			Z.Close()
+		}()
 
-		if !Z.Req() {
+		if !Z.Next() {
 			return
 		}
 		u, uok, v, vok := get2(U, V)
@@ -140,16 +185,16 @@ func Mul(U, V PS) PS {
 
 		var c Coefficient // `u*v`
 		c.Mul(u, v)
-		Z.Snd(c)
+		Z.Send(c)
 		UU := U.split()
 		VV := V.split()
 		W := Add(VV[0].Cmul(u), UU[0].Cmul(v))
 
-		if !Z.Req() {
+		if !Z.Next() {
 			return
 		}
 		c, _ = W.Get()
-		Z.Snd(c)
+		Z.Send(c)
 		Z.Append(W.Plus(Mul(UU[1], VV[1])))
 
 	}(U, V, Z)
@@ -171,14 +216,17 @@ func (U PS) Times(V ...PS) PS {
 
 // Diff erentiate returns the derivative of U.
 func (U PS) Diff() PS {
-	Z := NewPS()
+	Z := U.New()
 	go func(U, Z PS) {
-		defer Z.Close()
+		defer func() {
+			U.Drop()
+			Z.Close()
+		}()
 
 		var u Coefficient
 		var ok bool
 
-		if !Z.Req() {
+		if !Z.Next() {
 			return
 		}
 		if u, ok = U.Get(); !ok { // constant term: drop
@@ -189,8 +237,8 @@ func (U PS) Diff() PS {
 			if u, ok = U.Get(); !ok {
 				return
 			}
-			Z.Snd(u.Mul(ratI(i), u))
-			if !Z.Req() {
+			Z.Send(u.Mul(ratI(i), u))
+			if !Z.Next() {
 				return
 			}
 		}
@@ -201,22 +249,25 @@ func (U PS) Diff() PS {
 
 // Integrate, with const of integration
 func (U PS) Integ(c Coefficient) PS {
-	Z := NewPS()
+	Z := U.New()
 	go func(c Coefficient, U, Z PS) {
-		defer Z.Close()
+		defer func() {
+			U.Drop()
+			Z.Close()
+		}()
 
 		Z.Put(c)
 
 		var u Coefficient
 		var ok bool
 		for i := 1; ; i++ {
-			if !Z.Req() {
+			if !Z.Next() {
 				return
 			}
 			if u, ok = U.Get(); !ok {
 				return
 			}
-			Z.Snd(u.Mul(rat1byI(i), u))
+			Z.Send(u.Mul(rat1byI(i), u))
 		}
 	}(c, U, Z)
 	return Z
@@ -232,25 +283,28 @@ func (U PS) Integ(c Coefficient) PS {
 //	ZZ = `1/u * -UU * (z + x*ZZ)`
 //	ZZ = `1/u * (-z*UU + x*UU*ZZ)`
 func (U PS) Recip() PS {
-	Z := NewPS()
+	Z := U.New()
 	go func(U, Z PS) {
-		defer Z.Close()
+		defer func() {
+			U.Drop()
+			Z.Close()
+		}()
 
 		var z Coefficient
 		var ok bool
 
-		if !Z.Req() {
+		if !Z.Next() {
 			return
 		}
 		if z, ok = U.Get(); !ok {
 			return
 		}
 
-		Z.Snd(z.Inv(z)) // `1/u`
+		Z.Send(z.Inv(z)) // `1/u`
 
 		var mz Coefficient
 		mz.Neg(z) // minus z `-z`
-		ZZ := NewPS2()
+		ZZ := U.NewPair()
 		ZZ.split(Mul(U.Cmul(mz), ZZ[0].Shift(z)))
 		Z.Append(ZZ[1])
 
@@ -265,7 +319,7 @@ func (U PS) Recip() PS {
 //	integrate to get Z
 // Note: The constant term is simply ignored.
 func (U PS) Exp() PS {
-	ZZ := NewPS2()
+	ZZ := U.NewPair()
 	ZZ.split(Mul(ZZ[0], U.Diff()).Integ(aOne))
 	return ZZ[1]
 }
@@ -276,23 +330,27 @@ func (U PS) Exp() PS {
 //	then Subst(U,V) = `u + VV * Subst(V,UU)`
 // Note: Any nonzero constant term of `V` is ignored.
 func (U PS) Subst(V PS) PS {
-	Z := NewPS()
+	Z := U.New()
 	go func(U, V, Z PS) {
-		defer Z.Close()
+		defer func() {
+			U.Drop()
+			V.Drop()
+			Z.Close()
+		}()
 
 		var u Coefficient
 		var ok bool
 
 		VV := V.split()
 
-		if !Z.Req() {
+		if !Z.Next() {
 			return
 		}
 		if u, ok = U.Get(); !ok {
 			return
 		}
 
-		Z.Snd(u)
+		Z.Send(u)
 
 		if _, ok = VV[0].Get(); !ok {
 			return // Note: Any nonzero constant term of `V` is ignored.
@@ -307,27 +365,30 @@ func (U PS) Subst(V PS) PS {
 // MonSubst Monomial Substition: U(c x^n)
 // Each Ui is multiplied by `c^i` and followed by n-1 zeros.
 func (U PS) MonSubst(c0 Coefficient, n int) PS {
-	Z := NewPS()
+	Z := U.New()
 	go func(U, Z PS, c0 Coefficient, n int) {
-		defer Z.Close()
+		defer func() {
+			U.Drop()
+			Z.Close()
+		}()
 
 		var u Coefficient
 		var ok bool
 		c := aOne
 		var uc Coefficient // `u * c`
-		for Z.Req() {
+		for Z.Next() {
 			if u, ok = U.Get(); !ok {
 				return
 			}
 
-			Z.Snd(uc.Mul(u, c))
+			Z.Send(uc.Mul(u, c))
 			c.Mul(c, c0)
 
 			for i := 1; i < n; i++ {
-				if !Z.Req() {
+				if !Z.Next() {
 					return
 				}
-				Z.Snd(aZero)
+				Z.Send(aZero)
 			}
 		}
 	}(U, Z, c0, n)

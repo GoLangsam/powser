@@ -53,9 +53,9 @@ func (from *Dch) Get() (val *big.Rat, open bool) {
 	return
 }
 
-// Quit is to be used by a consumer to indicate it's finished,
-// it closes the request channel.
-func (from *Dch) Quit() {
+// Drop is to be called by a consumer when finished requesting.
+// The request channel is closed in order to broadcast this.
+func (from *Dch) Drop() {
 	close(from.req)
 }
 
@@ -68,20 +68,20 @@ func (from *Dch) From() (req chan<- struct{}, rcv <-chan *big.Rat) {
 	return from.req, from.ch
 }
 
-// Req is the request method.
+// Next is the request method.
 // It returns when a request was received
 // and reports iff the request channel was open.
 //
-// Req blocks until a requsted is received.
+// Next blocks until a requsted is received.
 //
-// A sucessful Req is to be followed by one Snd(v).
-func (into *Dch) Req() bool {
+// A sucessful Next is to be followed by one Send(v).
+func (into *Dch) Next() bool {
 	_, ok := <-into.req
 	return ok
 }
 
-// Snd is to be used after a successful Req()
-func (into *Dch) Snd(val *big.Rat) {
+// Send is to be used after a successful Next()
+func (into *Dch) Send(val *big.Rat) {
 	into.ch <- val
 }
 

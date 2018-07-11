@@ -30,11 +30,6 @@ func isZero(x integer) bool {
 	// return x.Cmp(big.NewInt(0)) == 0
 }
 
-func asFloat64(x integer) float64 {
-	return float64(x)
-	// return float64(x.Int64())
-}
-
 // PS represents a power series as a demand channel
 // of it's rational coefficients.
 type PS struct {
@@ -48,10 +43,5 @@ func NewPS() PS {
 
 // PS2 represents a pair of power series.
 type PS2 [2]PS
-
-// NewPS2 returns an empty pair of new power series.
-func NewPS2() PS2 {
-	return PS2{NewPS(), NewPS()}
-}
 
 // ===========================================================================
