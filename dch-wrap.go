@@ -34,7 +34,7 @@ func (U PS) GetWith(V PS) (cU Coefficient, okU bool, cV Coefficient, okV bool) {
 	return
 }
 
-// Split returns a pair of power series identical to (the current remainder of) a given power series.
+// Split returns a pair of power series identical to the given one.
 func (U PS) Split() [2]PS {
 	UU := U.newPair()
 	U.MyDch().SplitUs(UU[0].MyDch(), UU[1].MyDch())
