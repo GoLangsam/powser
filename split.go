@@ -4,19 +4,7 @@
 
 // Test concurrency primitives: power series.
 
-package dch
-
-import (
-	"github.com/GoLangsam/ps/rat"
-)
-
-type DchPair [2]*Dch
-
-func NewPair() (pair DchPair) {
-	pair[0] = New()
-	pair[1] = New()
-	return pair
-}
+package ps
 
 // Split reads a single demand channel and replicates its
 // output onto two, which may be read at different rates.
@@ -32,13 +20,13 @@ func NewPair() (pair DchPair) {
 // a signal on the release-wait channel tells the next newer
 // generation to begin servicing out[1].
 //
-func (out DchPair) Split(in *Dch) {
+func (out PS2) Split(in PS) {
 	release := make(chan struct{})
 	go out.dosplit(in, release)
 	release <- struct{}{}
 }
 
-func (out DchPair) dosplit(in *Dch, wait <-chan struct{}) {
+func (out PS2) dosplit(in PS, wait <-chan struct{}) {
 	both := false // do not service both channels
 
 	reqI, datI := in.From()
@@ -71,40 +59,4 @@ func (out DchPair) dosplit(in *Dch, wait <-chan struct{}) {
 	<-req1
 	dat1 <- dat
 	release <- struct{}{}
-}
-
-// Get a pair from a pair of demand channels
-func (in DchPair) Get() (out [2]*rat.Rat) {
-	n := len(in)
-	if n != 2 {
-		panic("bad n in Get2")
-	}
-
-	req := make([]chan<- struct{}, 0, n)
-	snd := make([]<-chan *rat.Rat, 0, n) // we might send here
-	dat := make([]<-chan *rat.Rat, 0, n) // we shall send here
-
-	for i := 0; i < n; i++ {
-		req[i], snd[i] = in[i].From()
-		dat[i] = nil
-	}
-
-	for n = 2 * n; n > 0; n-- {
-
-		select {
-		case req[0] <- struct{}{}:
-			dat[0] = snd[0]
-			req[0] = nil
-		case req[1] <- struct{}{}:
-			dat[1] = snd[1]
-			req[1] = nil
-		case it := <-dat[0]:
-			out[0] = it
-			dat[0] = nil
-		case it := <-dat[1]:
-			out[1] = it
-			dat[1] = nil
-		}
-	}
-	return out
 }

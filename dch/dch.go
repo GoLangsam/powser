@@ -14,25 +14,13 @@ import (
 type Dch struct {
 	req chan struct{}
 	dat chan *big.Rat
-	nam int
-}
-
-var chnames string
-var chnameserial int
-
-func init() {
-	chnameserial = -1
-	chnames = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 }
 
 // New reurns a (pointer to a) fresh demand channel
 func New() *Dch {
-	c := chnameserial % len(chnames)
-	chnameserial++
 	d := new(Dch)
 	d.req = make(chan struct{})
 	d.dat = make(chan *big.Rat)
-	d.nam = c
 	return d
 }
 

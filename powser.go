@@ -7,29 +7,37 @@ package ps
 import (
 	"github.com/GoLangsam/powser/big"
 	"github.com/GoLangsam/powser/dch"
-	"github.com/GoLangsam/powser/dchpair"
 )
 
-type PS = *dch.Dch // power series
-
-type PS2 = dchpair.DchPair // pair of power series
+// PS represents a power series as a demand channel
+// of it's rational coefficients.
+type PS struct {
+	*dch.Dch
+}
 
 var Ones PS
 var Twos PS
 
+// NewPS returns a new power series.
 func NewPS() PS {
-	return dch.New()
+	return PS{dch.New()}
 }
 
+// PS2 represents a pair of power series.
+type PS2 [2]PS
+
+// NewPS2 returns an empty pair of new power series.
 func NewPS2() PS2 {
-	return dchpair.DchPair{dch.New(), dch.New()}
+	return PS2{NewPS(), NewPS()}
 }
 
-// GetValS returns a slice with each first value received from the given power series
+// GetValS returns a slice with each first value received from the given power series.
 func GetValS(U ...PS) []*big.Rat {
-	pair := dchpair.DchPair{U[0], U[1]}.Get()
+	pair := PS2{U[0], U[1]}.Get()
 	return []*big.Rat{pair[0], pair[1]}
 }
+
+// ===========================================================================
 
 // Conventions
 // Upper-case for power series.
@@ -37,24 +45,24 @@ func GetValS(U ...PS) []*big.Rat {
 // Input variables: U,V,...
 // Output variables: ...,Y,Z
 
-// Evaln evaluates PS at x=c to n terms in floating point
-func Evaln(c *big.Rat, U PS, n int) {
+// Evaln evaluates PS at `x=c` to n terms in floating point.
+func Evaln(c *big.Rat, U PS, n int) float64 {
 	xn := float64(1)
-	x := float64(c.Num()) / float64(c.Den())
+	x := float64(c.Num()) / float64(c.Denom())
 	val := float64(0)
 	for i := 0; i < n; i++ {
 		u := U.Get()
 		if u.End() != 0 {
 			break
 		}
-		val = val + x*float64(u.Num())/float64(u.Den())
+		val = val + x*float64(u.Num())/float64(u.Denom())
 		xn = xn * x
 	}
-	print(val, "\n")
+	return val
 }
 
 // Printn prints n terms of a power series
-func Printn(U PS, n int) {
+func (U PS) Printn(n int) {
 	done := false
 	for ; !done && n > 0; n-- {
 		u := U.Get()
@@ -68,8 +76,8 @@ func Printn(U PS, n int) {
 }
 
 // Print one billion terms
-func Print(U PS) {
-	Printn(U, 1000000000)
+func (U PS) Print() {
+	U.Printn(1000000000)
 }
 
 // eval n terms of power series U at x=c
@@ -81,7 +89,7 @@ func eval(c *big.Rat, U PS, n int) *big.Rat {
 	if y.End() != 0 {
 		return big.Zero
 	}
-	return big.Add(y, big.Mul(c, eval(c, U, n-1)))
+	return y.Add(y, c.Mul(c, eval(c, U, n-1)))
 }
 
 // Power-series constructors return channels on which power
@@ -95,7 +103,17 @@ func Split(U PS) PS2 {
 	return UU
 }
 
+// ===========================================================================
 // Arithmetic on power series: each spawns a goroutine
+
+// Copy data from `from` into `into`
+func (into PS) Copy(from PS) {
+	req, val := into.Into()
+	for {
+		<-req
+		val <- from.Get()
+	}
+}
 
 // Add two power series
 func Add(U, V PS) PS {
@@ -108,7 +126,8 @@ func Add(U, V PS) PS {
 			uv = GetValS(U, V)
 			switch uv[0].End() + 2*uv[1].End() {
 			case 0:
-				Z_val <- big.Add(uv[0], uv[1])
+				var r *big.Rat
+				Z_val <- r.Add(uv[0], uv[1])
 			case 1:
 				Z_val <- uv[1]
 				Z.Copy(V)
@@ -135,7 +154,7 @@ func Cmul(c *big.Rat, U PS) PS {
 			if u.End() != 0 {
 				done = true
 			} else {
-				Z_val <- big.Mul(c, u)
+				Z_val <- u.Mul(c, u)
 			}
 		}
 		Z_val <- big.Finis
@@ -238,7 +257,9 @@ func Mul(U, V PS) PS {
 		if uv[0].End() != 0 || uv[1].End() != 0 {
 			Z_val <- big.Finis
 		} else {
-			Z_val <- big.Mul(uv[0], uv[1])
+			var prod *big.Rat
+			prod.Mul(uv[0], uv[1])
+			Z_val <- prod
 			UU := Split(U)
 			VV := Split(V)
 			W := Add(Cmul(uv[0], VV[0]), Cmul(uv[1], UU[0]))
@@ -264,7 +285,7 @@ func Diff(U PS) PS {
 				if u.End() != 0 {
 					done = true
 				} else {
-					Z_dat <- big.Mul(big.NewRatI(i), u)
+					Z_dat <- u.Mul(big.NewRatI(i), u)
 					<-Z_req
 				}
 			}
@@ -285,7 +306,7 @@ func Integ(c *big.Rat, U PS) PS {
 			<-Z_req
 			u := U.Get()
 			if u.End() == 0 {
-				Z_val <- big.Mul(big.NewRat1byI(i), u)
+				Z_val <- u.Mul(big.NewRat1byI(i), u)
 			} else {
 				Z_val <- big.Finis
 				done = true
@@ -304,8 +325,8 @@ func Binom(c *big.Rat) PS {
 		t := big.One
 		for c.Num() != 0 {
 			Z.Put(t)
-			t = big.Mul(big.Mul(t, c), big.NewRat1byI(n))
-			c = big.Sub(c, big.One)
+			t.Mul(t.Mul(t, c), big.NewRat1byI(n))
+			c.Sub(c, big.One)
 			n++
 		}
 		Z.Put(big.Finis)
@@ -324,12 +345,15 @@ func Binom(c *big.Rat) PS {
 func Recip(U PS) PS {
 	Z := NewPS()
 	go func(U, Z PS) {
-		req, dat := Z.Into()
+		Z_req, Z_val := Z.Into()
 		ZZ := NewPS2()
-		<-req
-		z := big.Inv(U.Get())
-		dat <- z
-		ZZ.Split(Mul(Cmul(big.Neg(z), U), Shift(z, ZZ[0])))
+		<-Z_req
+		z := U.Get()
+		z.Inv(z)
+		Z_val <- z
+		var mz *big.Rat
+		mz.Neg(z) // minus z `-z`
+		ZZ.Split(Mul(Cmul(mz, U), Shift(z, ZZ[0])))
 		Z.Copy(ZZ[1])
 	}(U, Z)
 	return Z
@@ -376,20 +400,21 @@ func Subst(U, V PS) PS {
 func MonSubst(U PS, c0 *big.Rat, n int) PS {
 	Z := NewPS()
 	go func(U, Z PS, c0 *big.Rat, n int) {
-		req, dat := Z.Into()
+		Z_req, Z_val := Z.Into()
 		c := big.One
+		var m *big.Rat // `u * c`
 		for {
-			<-req
+			<-Z_req
 			u := U.Get()
-			dat <- big.Mul(u, c)
-			c = big.Mul(c, c0)
+			Z_val <- m.Mul(u, c)
+			c.Mul(c, c0)
 			if u.End() != 0 {
-				dat <- big.Finis
+				Z_val <- big.Finis
 				break
 			}
 			for i := 1; i < n; i++ {
-				<-req
-				dat <- big.Zero
+				<-Z_req
+				Z_val <- big.Zero
 			}
 		}
 	}(U, Z, c0, n)

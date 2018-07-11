@@ -2,30 +2,32 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+// Package big implements arithmetic on rational numbers
+// as a subset of the methods of "math/big":
+// Num, Denom, Set, String
+// Add, Mul, Sub, Neg.
+// There is Eq, but no Cmp.
+// Nominator and Denominator are int64.
 package big
 
+// A Rat represents a quotient a/b of arbitrary precision.
+// The zero value for a Rat represents the value 0.
 type Rat struct {
 	num, den int64 // numerator, denominator
 }
 
-func (u *Rat) Num() int64 { return u.num }
-func (u *Rat) Den() int64 { return u.den }
+// Num returns the numerator of x; it may be <= 0.
+func (x *Rat) Num() int64 { return x.num }
 
-func (u *Rat) Pr() {
-	if u.den == 1 {
-		print(u.num)
-	} else {
-		print(u.num, "/", u.den)
-	}
-	print(" ")
+// Denom returns the denominator of x; it is always > 0.
+func (x *Rat) Denom() int64 { return x.den }
+
+// Eq discriminates iff x is equal to c.
+func (x *Rat) Eq(c *Rat) bool {
+	return x.num == c.num && x.den == c.den
 }
 
-func (u *Rat) Eq(c *Rat) bool {
-	return u.num == c.num && u.den == c.den
-}
-
-// Integer gcd; needed for rational arithmetic
-
+// gcd needed for rational arithmetic
 func gcd(u, v int64) int64 {
 	if u < 0 {
 		return gcd(-u, v)
@@ -73,7 +75,8 @@ func init() {
 	Zero = NewRat(0, 1)
 	One = NewRat(1, 1)
 	Two = NewRat(2, 1)
-	MinusOne = Neg(One)
+	// MinusOne.Neg(One)
+	MinusOne = NewRat(-1, 1)
 	Finis = NewRat(1, 0)
 }
 
@@ -85,38 +88,57 @@ func (u *Rat) End() int64 {
 	return 0
 }
 
+func (z *Rat) Set(x *Rat) *Rat {
+	if z == nil {
+		z = new(Rat)
+	}
+	if z != x {
+		(*z).num, (*z).den = (*x).num, (*x).den
+	}
+	return z
+}
+
 // Operations on rationals
 
 // Add sets z to the sum x+y and returns z.
-func Add(x, y *Rat) *Rat {
+func (z *Rat) Add(x, y *Rat) *Rat {
 	g := gcd(x.den, y.den)
-	return NewRat(x.num*(y.den/g)+y.num*(x.den/g), x.den*(y.den/g))
+
+	z.Set(x)
+	z.num, z.den = x.num*(y.den/g)+y.num*(x.den/g), x.den*(y.den/g)
+	return z
 }
 
 // Mul sets z to the product x*y and returns z.
-func Mul(x, y *Rat) *Rat {
+func (z *Rat) Mul(x, y *Rat) *Rat {
 	g1 := gcd(x.num, y.den)
 	g2 := gcd(x.den, y.num)
-	r := new(Rat)
-	r.num = (x.num / g1) * (y.num / g2)
-	r.den = (x.den / g2) * (y.den / g1)
-	return r
+
+	z.Set(x)
+	z.num = (x.num / g1) * (y.num / g2)
+	z.den = (x.den / g2) * (y.den / g1)
+	return z
 }
 
 // Neg sets z to -x and returns z.
-func Neg(x *Rat) *Rat {
-	return NewRat(-x.num, x.den)
+func (z *Rat) Neg(x *Rat) *Rat {
+	z.Set(x)
+	z.num, z.den = -x.num, x.den
+	return z
 }
 
 // Sub sets z to the difference x-y and returns z.
-func Sub(x, y *Rat) *Rat {
-	return Add(x, Neg(y))
+func (z *Rat) Sub(x, y *Rat) *Rat {
+	z.Set(x)
+	return z.Add(x, z.Neg(y))
 }
 
 // Inv sets z to 1/x and returns z.
-func Inv(x *Rat) *Rat { // invert a rat
+func (z *Rat) Inv(x *Rat) *Rat { // invert a rat
 	if x.num == 0 {
 		panic("zero divide in inv")
 	}
-	return NewRat(x.den, x.num)
+	z.Set(x)
+	z.num, z.den = x.den, x.num
+	return z
 }
