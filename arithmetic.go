@@ -13,42 +13,71 @@ package ps
 // Input variables: U,V,...
 // Output variables: ...,Y,Z
 
-// clone returns a new powerseries to receive values from `U`.
-func (U PS) clone() PS {
-	Z := U.New()
-	go func(U, Z PS) {
-		defer func() {
-			U.Drop()
-			Z.Close()
-		}()
-		Z.Append(U)
-	}(U, Z)
-	return Z
+// New returns a fresh power series.
+func (U PS) New() PS {
+	return NewPS()
 }
 
-// split returns a pair of power series identical to a given power series.
-func (U PS) split() PS2 {
-	UU := U.NewPair()
-	UU.split(U)
-	return UU
+// NewPair returns an empty pair of new power series.
+func (U PS) NewPair() PS2 {
+	return PS2{NewPS(), NewPS()}
 }
 
-// split inp into a given pair of power series.
-func (out PS2) split(in PS) {
-	release := make(chan struct{})
-	go split(out[0], out[1], in, release)
-	close(release)
+// Obtain for `Into` from `From` and report success.
+func (Into PS) Obtain(From PS) (c Coefficient, ok bool) {
+	if ok = Into.Next(); ok {
+		c, ok = From.Get()
+	}
+	if !ok {
+		From.Drop()
+		Into.Close()
+	}
+	return
 }
 
+// SendOneFrom for `Into` from `From` and report success.
+func (Into PS) SendOneFrom(From PS) (ok bool) {
+	var c Coefficient
+	if c, ok = Into.Obtain(From); ok {
+		Into.Send(c)
+	}
+	return
+}
+
+// Clone returns a new powerseries to receive values from `U`.
+func (From PS) Clone() PS {
+	Into := From.New()
+	go Into.Append(From)
+	return Into
+}
+
+// Append all coefficients from `Z` to `U`.
+func (Into PS) Append(From PS) {
+	defer func() {
+		From.Drop()
+		Into.Close()
+	}()
+	Into.append(From)
+}
+
+// append all coefficients from `Z` to `U`
+// without cleanup of handshaking resources.
+func (Into PS) append(From PS) {
+	var c Coefficient
+	var ok bool
+	for Into.Next() {
+		if c, ok = From.Get(); !ok {
+			return
+		}
+		Into.Send(c)
+	}
+}
+
+// ===========================================================================
 // Add two power series.
 func Add(U, V PS) PS {
 	Z := NewPS()
 	go func(U, V, Z PS) {
-		defer func() {
-			U.Drop()
-			V.Drop()
-			Z.Close()
-		}()
 
 		var u, v Coefficient
 		var uok, vok bool
@@ -58,12 +87,17 @@ func Add(U, V PS) PS {
 			case uok && vok:
 				Z.Send(u.Add(u, v))
 			case uok:
+				V.Drop()
 				Z.Send(u)
 				Z.Append(U)
 			case vok:
+				U.Drop()
 				Z.Send(v)
 				Z.Append(V)
 			default:
+				U.Drop()
+				V.Drop()
+				Z.Close()
 				return
 			}
 		}
@@ -71,7 +105,8 @@ func Add(U, V PS) PS {
 	return Z
 }
 
-// Plus adds powerseries to `U` and returns the sum.
+// Plus adds powerseries to `U`
+// and returns the sum.
 // Tail-recursion is used to achieve this.
 func (U PS) Plus(V ...PS) PS {
 	switch len(V) {
@@ -84,34 +119,14 @@ func (U PS) Plus(V ...PS) PS {
 	}
 }
 
-// Cmul multiplies a power series by a constant
-func (U PS) Cmul(c Coefficient) PS {
-	Z := U.New()
-	go func(c Coefficient, U, Z PS) {
-		defer func() {
-			U.Drop()
-			Z.Close()
-		}()
-
-		var u Coefficient
-		var ok bool
-		for Z.Next() {
-			if u, ok = U.Get(); !ok {
-				return
-			}
-			Z.Send(u.Mul(c, u))
-		}
-	}(c, U, Z)
-	return Z
-}
-
 // Minus subtracts `V` from `U`
 // and returns `U + (-1)*V`
 func (U PS) Minus(V PS) PS {
 	return U.Plus(V.Cmul(aMinusOne))
 }
 
-// Less subtracts powerseries from `U` and returns the difference.
+// Less subtracts powerseries from `U`
+// and returns the difference.
 // Tail-recursion is used to achieve this.
 func (U PS) Less(V ...PS) PS {
 	switch len(V) {
@@ -124,14 +139,23 @@ func (U PS) Less(V ...PS) PS {
 	}
 }
 
+// Cmul multiplies `U` by a constant `c`
+// and returns `c*U`.
+func (U PS) Cmul(c Coefficient) PS {
+	Z := U.New()
+	go func(c Coefficient, U, Z PS) {
+		for u, ok := Z.Obtain(U); ok; u, ok = Z.Obtain(U) {
+			Z.Send(u.Mul(c, u))
+		}
+	}(c, U, Z)
+	return Z
+}
+
 // Monmul multiplies `U` by the monomial "x^n"
 // and returns `x^n * U`.
 func (U PS) Monmul(n int) PS {
 	Z := U.New()
 	go func(n int, U PS, Z PS) {
-		defer func() {
-			U.Drop()
-		}()
 		for ; n > 0; n-- {
 			Z.Put(aZero)
 		}
@@ -140,20 +164,17 @@ func (U PS) Monmul(n int) PS {
 	return Z
 }
 
-// Xmul multiplies a power series by x, (by the monomial "x^1")
+// Xmul multiplies `U` by `x`
+// (by the monomial "x^1")
 // and returns `x * U`.
 func (U PS) Xmul() PS {
 	return U.Monmul(1)
 }
 
-// Shift
+// Shift returns `c + x*U`
 func (U PS) Shift(c Coefficient) PS {
 	Z := U.New()
 	go func(c Coefficient, U, Z PS) {
-		defer func() {
-			U.Drop()
-			Z.Close()
-		}()
 		Z.Put(c)
 		Z.Append(U)
 	}(c, U, Z)
@@ -169,39 +190,39 @@ func (U PS) Shift(c Coefficient) PS {
 func Mul(U, V PS) PS {
 	Z := NewPS()
 	go func(U, V, Z PS) {
-		defer func() {
+
+		if !Z.Next() {
 			U.Drop()
 			V.Drop()
 			Z.Close()
-		}()
-
-		if !Z.Next() {
 			return
 		}
 		u, uok, v, vok := get2(U, V)
 		if !uok || !vok {
+			U.Drop()
+			V.Drop()
+			Z.Close()
 			return
 		}
 
-		var c Coefficient // `u*v`
+		c := u // `u*v`
 		c.Mul(u, v)
 		Z.Send(c)
-		UU := U.split()
-		VV := V.split()
-		W := Add(VV[0].Cmul(u), UU[0].Cmul(v))
 
-		if !Z.Next() {
-			return
+		UU := U.Split()
+		VV := V.Split()
+
+		W1 := Add(VV[0].Cmul(u), UU[0].Cmul(v))
+
+		if Z.SendOneFrom(W1) {
+			Z.Append(W1.Plus(Mul(UU[1], VV[1])))
 		}
-		c, _ = W.Get()
-		Z.Send(c)
-		Z.Append(W.Plus(Mul(UU[1], VV[1])))
-
 	}(U, V, Z)
 	return Z
 }
 
-// Times multiplies powerseries to `U` and returns the total product.
+// Times multiplies powerseries to `U`
+// and returns the total product.
 // Tail-recursion is used to achieve this.
 func (U PS) Times(V ...PS) PS {
 	switch len(V) {
@@ -214,60 +235,44 @@ func (U PS) Times(V ...PS) PS {
 	}
 }
 
-// Diff erentiate returns the derivative of U.
-func (U PS) Diff() PS {
+// Deriv differentiates `U`
+// and returns the derivative.
+func (U PS) Deriv() PS {
 	Z := U.New()
 	go func(U, Z PS) {
-		defer func() {
-			U.Drop()
-			Z.Close()
-		}()
-
-		var u Coefficient
-		var ok bool
-
-		if !Z.Next() {
+		u, ok := Z.Obtain(U)
+		if !ok {
 			return
 		}
-		if u, ok = U.Get(); !ok { // constant term: drop
-			return
-		}
+		// constant term: drop
+		// Thus: we must Z.Send() before another Z.Next()
+		// and may not use an Obtain-loop and have to cleanup ourselfs
 
-		for i := 1; ; i++ {
-			if u, ok = U.Get(); !ok {
-				return
-			}
-			Z.Send(u.Mul(ratI(i), u))
+		i := 1
+		for u, ok = U.Get(); ok; u, ok = U.Get() {
+			Z.Send(u.Mul(ratIby1(i), u))
 			if !Z.Next() {
+				Z.Close()
+				U.Drop()
 				return
 			}
+			i++
 		}
 
 	}(U, Z)
 	return Z
 }
 
-// Integrate, with const of integration
+// Integrate, with const of integration.
 func (U PS) Integ(c Coefficient) PS {
 	Z := U.New()
 	go func(c Coefficient, U, Z PS) {
-		defer func() {
-			U.Drop()
-			Z.Close()
-		}()
-
 		Z.Put(c)
 
-		var u Coefficient
-		var ok bool
-		for i := 1; ; i++ {
-			if !Z.Next() {
-				return
-			}
-			if u, ok = U.Get(); !ok {
-				return
-			}
+		i := 1
+		for u, ok := Z.Obtain(U); ok; u, ok = Z.Obtain(U) {
 			Z.Send(u.Mul(rat1byI(i), u))
+			i++
 		}
 	}(c, U, Z)
 	return Z
@@ -285,29 +290,17 @@ func (U PS) Integ(c Coefficient) PS {
 func (U PS) Recip() PS {
 	Z := U.New()
 	go func(U, Z PS) {
-		defer func() {
-			U.Drop()
-			Z.Close()
-		}()
-
-		var z Coefficient
-		var ok bool
-
-		if !Z.Next() {
+		z, ok := Z.Obtain(U)
+		if !ok {
 			return
 		}
-		if z, ok = U.Get(); !ok {
-			return
-		}
-
 		Z.Send(z.Inv(z)) // `1/u`
 
-		var mz Coefficient
+		mz := z
 		mz.Neg(z) // minus z `-z`
 		ZZ := U.NewPair()
-		ZZ.split(Mul(U.Cmul(mz), ZZ[0].Shift(z)))
+		ZZ.Split(Mul(U.Cmul(mz), ZZ[0].Shift(z)))
 		Z.Append(ZZ[1])
-
 	}(U, Z)
 	return Z
 }
@@ -320,7 +313,7 @@ func (U PS) Recip() PS {
 // Note: The constant term is simply ignored.
 func (U PS) Exp() PS {
 	ZZ := U.NewPair()
-	ZZ.split(Mul(ZZ[0], U.Diff()).Integ(aOne))
+	ZZ.Split(Mul(ZZ[0], U.Deriv()).Integ(aOne))
 	return ZZ[1]
 }
 
@@ -332,60 +325,37 @@ func (U PS) Exp() PS {
 func (U PS) Subst(V PS) PS {
 	Z := U.New()
 	go func(U, V, Z PS) {
-		defer func() {
-			U.Drop()
+		u, ok := Z.Obtain(U)
+		if !ok {
 			V.Drop()
-			Z.Close()
-		}()
-
-		var u Coefficient
-		var ok bool
-
-		VV := V.split()
-
-		if !Z.Next() {
 			return
 		}
-		if u, ok = U.Get(); !ok {
-			return
-		}
-
 		Z.Send(u)
 
-		if _, ok = VV[0].Get(); !ok {
-			return // Note: Any nonzero constant term of `V` is ignored.
-		}
-
+		VV := V.Split()
+		VV[0].Get() // Note: Any nonzero constant term of `V` is ignored.
 		Z.Append(Mul(VV[0], U.Subst(VV[1])))
 
 	}(U, V, Z)
 	return Z
 }
 
-// MonSubst Monomial Substition: U(c x^n)
+// MonSubst Monomial Substition: `U(c x^n)`
+//
 // Each Ui is multiplied by `c^i` and followed by n-1 zeros.
 func (U PS) MonSubst(c0 Coefficient, n int) PS {
 	Z := U.New()
 	go func(U, Z PS, c0 Coefficient, n int) {
-		defer func() {
-			U.Drop()
-			Z.Close()
-		}()
-
-		var u Coefficient
-		var ok bool
 		c := aOne
-		var uc Coefficient // `u * c`
-		for Z.Next() {
-			if u, ok = U.Get(); !ok {
-				return
-			}
-
+		uc := c // `u * c`
+		for u, ok := Z.Obtain(U); ok; u, ok = Z.Obtain(U) {
 			Z.Send(uc.Mul(u, c))
 			c.Mul(c, c0)
 
 			for i := 1; i < n; i++ {
 				if !Z.Next() {
+					Z.Close()
+					U.Drop()
 					return
 				}
 				Z.Send(aZero)

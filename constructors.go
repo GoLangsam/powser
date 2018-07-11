@@ -17,6 +17,16 @@ package ps
 // series flow. They start an encapsulated generator that
 // puts the terms of the series on the channel.
 
+// Ones are 1 1 1 1 1 ... = `1/(1-x)` with a simple pole at `x=1`.
+func Ones() PS {
+	return AdInfinitum(NewCoefficient(1, 1))
+}
+
+// Twos are 2 2 2 2 2 ... just for samples.
+func Twos() PS {
+	return AdInfinitum(NewCoefficient(2, 1))
+}
+
 // AdInfinitum repeates coefficient `c` ad infinitum
 // and returns `c^i`.
 func AdInfinitum(c Coefficient) PS {
@@ -59,7 +69,9 @@ func Binomial(c Coefficient) PS {
 		n := 1
 		t := aOne
 		for !isZero(c.Num()) {
-			Z.Put(t)
+			if !Z.Put(t) {
+				return
+			}
 			t.Mul(t.Mul(t, c), rat1byI(n))
 			c.Sub(c, aOne)
 			n++
@@ -75,16 +87,16 @@ func Polynom(a ...Coefficient) PS {
 	go func(Z PS, a ...Coefficient) {
 		defer Z.Close()
 
-		var done bool
 		j := 0
-		for j = len(a); !done && j > 0; j-- {
+		for j = len(a); j > 0; j-- {
 			if !isZero(a[j-1].Num()) { // remove trailing zeros
-				done = true
+				break
 			}
 		}
-
 		for i := 0; i < j; i++ {
-			Z.Put(a[i])
+			if !Z.Put(a[i]) {
+				return
+			}
 		}
 	}(Z, a...)
 	return Z

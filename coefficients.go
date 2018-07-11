@@ -21,8 +21,8 @@ func init() {
 	aMinusOne = NewCoefficient(-1, 1) // -1 - aMinusOne.Neg(aOne) raises `nil` exception ?!?
 }
 
-// ratI creates a new Rat `i/1` from int `i`.
-func ratI(i int) Coefficient {
+// ratIby1 creates a new Rat `i/1` from int `i`.
+func ratIby1(i int) Coefficient {
 	return NewCoefficient(int64(i), 1)
 }
 

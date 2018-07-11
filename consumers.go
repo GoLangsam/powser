@@ -5,7 +5,7 @@
 package ps
 
 // ===========================================================================
-// Helpers
+// Consumers: Eval & Print
 
 // Conventions
 // Upper-case for power series.
@@ -13,60 +13,17 @@ package ps
 // Input variables: U,V,...
 // Output variables: ...,Y,Z
 
-// Printn prints n terms of a power series.
-func (U PS) Printn(n int) {
-	defer print(("\n"))
-
-	var u Coefficient
-	var ok bool
-	for ; n > 0; n-- {
-		if u, ok = U.Get(); !ok {
-			return
-		}
-		print(u.String())
-	}
-}
-
-// Print one billion terms.
-func (U PS) Print() {
-	U.Printn(1000000000)
-}
-
-// ===========================================================================
-// Helpers
-
-// New returns a fresh power series.
-func (U PS) New() PS {
-	return NewPS()
-}
-
-// NewPair returns an empty pair of new power series.
-func (U PS) NewPair() PS2 {
-	return PS2{NewPS(), NewPS()}
-}
-
-// Append the coefficient from `Z` to `U`.
-func (U PS) Append(Z PS) {
-
-	var u Coefficient
-	var ok bool
-	for U.Next() {
-		if u, ok = Z.Get(); !ok {
-			return
-		}
-		U.Send(u)
-	}
-}
-
 // Eval n terms of power series `U` at `x=c`.
 func (U PS) Eval(c Coefficient, n int) Coefficient {
 	if n == 0 {
+		U.Drop()
 		return aZero
 	}
 
 	var u Coefficient
 	var ok bool
 	if u, ok = U.Get(); !ok {
+		U.Drop()
 		return aZero
 	}
 	return u.Add(u, c.Mul(c, U.Eval(c, n-1)))
@@ -74,6 +31,8 @@ func (U PS) Eval(c Coefficient, n int) Coefficient {
 
 // Evaln evaluates PS at `x=c` to n terms in floating point.
 func (U PS) Evaln(c Coefficient, n int) float64 {
+	defer U.Drop()
+
 	ci := float64(1)
 	fc, _ := c.Float64()
 	val := float64(0)
@@ -90,6 +49,27 @@ func (U PS) Evaln(c Coefficient, n int) float64 {
 		ci = fc * ci   // `c^(i+1) = c * c^i`
 	}
 	return val
+}
+
+// Printn prints n terms of a power series.
+func (U PS) Printn(n int) {
+	defer U.Drop()
+	defer print(("\n"))
+
+	var u Coefficient
+	var ok bool
+	for ; n > 0; n-- {
+		if u, ok = U.Get(); !ok {
+			return
+		}
+		print(u.String())
+		print(" ")
+	}
+}
+
+// Print one billion terms.
+func (U PS) Print() {
+	U.Printn(1000000000)
 }
 
 // ===========================================================================
