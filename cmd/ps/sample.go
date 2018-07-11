@@ -41,7 +41,7 @@ func sample(n int) {
 
 	switch n {
 
-	// Add Plus Less Minus
+	// Plus Less
 	case 1:
 		fmt.Print("#", n, " Ones: ")
 		Ones().Printn(20)
@@ -50,7 +50,7 @@ func sample(n int) {
 		Twos().Printn(20)
 	case 3:
 		fmt.Print("#", n, " Add : ")
-		Add(Ones(), Twos()).Printn(20)
+		Ones().Plus(Twos()).Printn(20)
 	case 4:
 		fmt.Print("#", n, " 1+  : ")
 		Ones().Plus().Printn(20)
@@ -65,12 +65,12 @@ func sample(n int) {
 		Ones().Less().Printn(20)
 	case 8:
 		fmt.Print("#", n, " 1-2 : ")
-		Ones().Minus(Twos()).Printn(18)
+		Ones().Less(Twos()).Printn(18)
 	case 9:
 		fmt.Print("#", n, " 1-9 : ")
 		Ones().Less(Ones(), Twos(), Ones(), Twos(), Ones(), Twos()).Printn(18)
 
-	// Add Plus Less Minus - with short PS
+	// Plus Less - with short PS
 
 	case 10:
 		fmt.Print("#", n, " Quad: ")
@@ -83,7 +83,7 @@ func sample(n int) {
 		poly().Printn(2)
 	case 13:
 		fmt.Print("#", n, " Add : ")
-		Add(Ones(), poly()).Printn(17)
+		Ones().Plus(poly()).Printn(17)
 	case 14:
 		fmt.Print("#", n, " 1+  : ")
 		poly().Plus().Printn(20)
@@ -98,7 +98,7 @@ func sample(n int) {
 		sqr().Less().Printn(20)
 	case 18:
 		fmt.Print("#", n, " 1-2 : ")
-		sqr().Minus(lin()).Printn(18)
+		sqr().Less(lin()).Printn(18)
 	case 19:
 		fmt.Print("#", n, " 1-9 : ")
 		poly().Less(one(), lin(), sqr(), one(), lin(), sqr()).Printn(18)
@@ -114,7 +114,7 @@ func sample(n int) {
 		Ones().XMul().Printn(20)
 	case 22:
 		fmt.Print("#", n, " Mul : ")
-		Mul(Ones(), Ones()).Printn(20)
+		Ones().Times(Ones()).Printn(20)
 	case 23:
 		fmt.Print("#", n, " 1*  : ")
 		Ones().Times().Printn(20)
