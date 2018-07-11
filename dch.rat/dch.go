@@ -109,9 +109,14 @@ func (into *Dch) Into() (req <-chan struct{}, snd chan<- *big.Rat) {
 	return into.req, into.ch
 }
 
-// Close closes the underlying *big.Rat channel.
+// Close is to be called by a producer when finished sending.
+// The *big.Rat channel is closed in order to broadcast this.
+//
+// In order to avoid deadlock, pending requests are drained.
 func (into *Dch) Close() {
 	close(into.ch)
+	for _ = range into.req {
+	} // drain requests - there could be some
 }
 
 // Cap reports the capacity of the underlying *big.Rat channel.
