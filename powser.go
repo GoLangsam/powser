@@ -5,13 +5,14 @@
 package ps
 
 import (
+	"github.com/GoLangsam/powser/big"
 	"github.com/GoLangsam/powser/dch"
-	"github.com/GoLangsam/powser/rat"
+	"github.com/GoLangsam/powser/dchpair"
 )
 
 type PS = *dch.Dch // power series
 
-type PS2 = dch.DchPair // pair of power series
+type PS2 = dchpair.DchPair // pair of power series
 
 var Ones PS
 var Twos PS
@@ -21,7 +22,13 @@ func NewPS() PS {
 }
 
 func NewPS2() PS2 {
-	return dch.NewPair()
+	return dchpair.DchPair{dch.New(), dch.New()}
+}
+
+// GetValS returns a slice with each first value received from the given power series
+func GetValS(U ...PS) []*big.Rat {
+	pair := dchpair.DchPair{U[0], U[1]}.Get()
+	return []*big.Rat{pair[0], pair[1]}
 }
 
 // Conventions
@@ -30,8 +37,8 @@ func NewPS2() PS2 {
 // Input variables: U,V,...
 // Output variables: ...,Y,Z
 
-// print eval in floating point of PS at x=c to n terms
-func Evaln(c *rat.Rat, U PS, n int) {
+// Evaln evaluates PS at x=c to n terms in floating point
+func Evaln(c *big.Rat, U PS, n int) {
 	xn := float64(1)
 	x := float64(c.Num()) / float64(c.Den())
 	val := float64(0)
@@ -46,7 +53,7 @@ func Evaln(c *rat.Rat, U PS, n int) {
 	print(val, "\n")
 }
 
-// Print n terms of a power series
+// Printn prints n terms of a power series
 func Printn(U PS, n int) {
 	done := false
 	for ; !done && n > 0; n-- {
@@ -60,128 +67,134 @@ func Printn(U PS, n int) {
 	print(("\n"))
 }
 
+// Print one billion terms
 func Print(U PS) {
 	Printn(U, 1000000000)
 }
 
-// Evaluate n terms of power series U at x=c
-func eval(c *rat.Rat, U PS, n int) *rat.Rat {
+// eval n terms of power series U at x=c
+func eval(c *big.Rat, U PS, n int) *big.Rat {
 	if n == 0 {
-		return rat.Zero
+		return big.Zero
 	}
 	y := U.Get()
 	if y.End() != 0 {
-		return rat.Zero
+		return big.Zero
 	}
-	return rat.Add(y, rat.Mul(c, eval(c, U, n-1)))
+	return big.Add(y, big.Mul(c, eval(c, U, n-1)))
 }
 
 // Power-series constructors return channels on which power
 // series flow.  They start an encapsulated generator that
 // puts the terms of the series on the channel.
 
-// Make a pair of power series identical to a given power series
-
-func Split(U PS) [2]*dch.Dch {
+// Split returns a pair of power series identical to a given power series
+func Split(U PS) PS2 {
 	UU := NewPS2()
 	go UU.Split(U)
 	return UU
 }
 
+// Arithmetic on power series: each spawns a goroutine
+
 // Add two power series
 func Add(U, V PS) PS {
 	Z := NewPS()
 	go func(U, V, Z PS) {
-		var uv [2]*rat.Rat
+		Z_req, Z_val := Z.Into()
+		uv := make([]*big.Rat, 2)
 		for {
-			<-Z.Req()
-			uv = dch.Get2(dch.DchPair{U, V})
+			<-Z_req
+			uv = GetValS(U, V)
 			switch uv[0].End() + 2*uv[1].End() {
 			case 0:
-				Z.Dat() <- rat.Add(uv[0], uv[1])
+				Z_val <- big.Add(uv[0], uv[1])
 			case 1:
-				Z.Dat() <- uv[1]
+				Z_val <- uv[1]
 				Z.Copy(V)
 			case 2:
-				Z.Dat() <- uv[0]
+				Z_val <- uv[0]
 				Z.Copy(U)
 			case 3:
-				Z.Dat() <- rat.Finis
+				Z_val <- big.Finis
 			}
 		}
 	}(U, V, Z)
 	return Z
 }
 
-// Multiply a power series by a constant
-func Cmul(c *rat.Rat, U PS) PS {
+// Cmul multiplies a power series by a constant
+func Cmul(c *big.Rat, U PS) PS {
 	Z := NewPS()
-	go func(c *rat.Rat, U, Z PS) {
+	go func(c *big.Rat, U, Z PS) {
+		Z_req, Z_val := Z.Into()
 		done := false
 		for !done {
-			<-Z.Req()
+			<-Z_req
 			u := U.Get()
 			if u.End() != 0 {
 				done = true
 			} else {
-				Z.Dat() <- rat.Mul(c, u)
+				Z_val <- big.Mul(c, u)
 			}
 		}
-		Z.Dat() <- rat.Finis
+		Z_val <- big.Finis
 	}(c, U, Z)
 	return Z
 }
 
-// Subtract
-
+// Sub subtracts `V` from `U`
+// and returns `U + (-1)*V`
 func Sub(U, V PS) PS {
-	return Add(U, Cmul(rat.MinusOne, V))
+	return Add(U, Cmul(big.MinusOne, V))
 }
 
-// Multiply a power series by the monomial x^n
-
+// Monmul multiplies a power series by the monomial "x^n"
+// and returns `x^n * U`.
 func Monmul(U PS, n int) PS {
 	Z := NewPS()
 	go func(n int, U PS, Z PS) {
 		for ; n > 0; n-- {
-			Z.Put(rat.Zero)
+			Z.Put(big.Zero)
 		}
 		Z.Copy(U)
 	}(n, U, Z)
 	return Z
 }
 
-// Multiply by x
-
+// Xmul multiplies a power series by x, (by the monomial "x^1")
+// and returns `x * U`.
 func Xmul(U PS) PS {
 	return Monmul(U, 1)
 }
 
-func Rep(c *rat.Rat) PS {
+// Rep repeates c
+// and returns `c^i`.
+func Rep(c *big.Rat) PS {
 	Z := NewPS()
 	go Z.Repeat(c)
 	return Z
 }
 
-// Monomial c*x^n
-
-func Mon(c *rat.Rat, n int) PS {
+// Mon returns the Monomial `c * x^n`
+func Mon(c *big.Rat, n int) PS {
 	Z := NewPS()
-	go func(c *rat.Rat, n int, Z PS) {
+	go func(c *big.Rat, n int, Z PS) {
 		if c.Num() != 0 {
 			for ; n > 0; n = n - 1 {
-				Z.Put(rat.Zero)
+				Z.Put(big.Zero)
 			}
 			Z.Put(c)
 		}
-		Z.Put(rat.Finis)
+		Z.Put(big.Finis)
 	}(c, n, Z)
 	return Z
 }
 
-func Shift(c *rat.Rat, U PS) PS {
+// Shift
+func Shift(c *big.Rat, U PS) PS {
 	Z := NewPS()
-	go func(c *rat.Rat, U, Z PS) {
+	go func(c *big.Rat, U, Z PS) {
 		Z.Put(c)
 		Z.Copy(U)
 	}(c, U, Z)
@@ -190,56 +203,59 @@ func Shift(c *rat.Rat, U PS) PS {
 
 // simple pole at 1: 1/(1-x) = 1 1 1 1 1 ...
 
-// Convert array of coefficients, constant term first
+// Poly converts coefficients, constant term first
 // to a (finite) power series
+func Poly(a ...*big.Rat) PS {
+	Z := NewPS()
+	go func(Z PS, a ...*big.Rat) {
+		var done bool
+		j := 0
+		for j = len(a); !done && j > 0; j-- {
+			if a[j-1].Num() != 0 {
+				done = true
+			}
+		}
 
-/*
-func Poly(a [] *rat.Rat) PS{
-	Z:=NewPS()
-	begin func(a [] *rat.Rat, Z PS){
-		j:=0
-		done:=0
-		for j=len(a); !done&&j>0; j=j-1)
-			if(a[j-1].num!=0) done=1
-		i:=0
-		for(; i<j; i=i+1) Z.Put(a[i])
-		Z.Put(rat.Finis)
-	}()
+		for i := 0; i < j; i++ {
+			Z.Put(a[i])
+		}
+
+		Z.Put(big.Finis)
+	}(Z, a...)
 	return Z
 }
-*/
 
-// Multiply. The algorithm is
-//	let U = u + x*UU
-//	let V = v + x*VV
-//	then UV = u*v + x*(u*VV+v*UU) + x*x*UU*VV
-
+// Mul multiplies. The algorithm is
+//	let U = `u + x*UU`
+//	let V = `v + x*VV`
+//	then UV = `u*v + x*(u*VV+v*UU) + x*x*UU*VV`
 func Mul(U, V PS) PS {
 	Z := NewPS()
 	go func(U, V, Z PS) {
-		<-Z.Req()
-		uv := dch.Get2([2]*dch.Dch{U, V})
+		Z_req, Z_val := Z.Into()
+		<-Z_req
+		uv := GetValS(U, V)
 		if uv[0].End() != 0 || uv[1].End() != 0 {
-			Z.Dat() <- rat.Finis
+			Z_val <- big.Finis
 		} else {
-			Z.Dat() <- rat.Mul(uv[0], uv[1])
+			Z_val <- big.Mul(uv[0], uv[1])
 			UU := Split(U)
 			VV := Split(V)
 			W := Add(Cmul(uv[0], VV[0]), Cmul(uv[1], UU[0]))
-			<-Z.Req()
-			Z.Dat() <- W.Get()
+			<-Z_req
+			Z_val <- W.Get()
 			Z.Copy(Add(W, Mul(UU[1], VV[1])))
 		}
 	}(U, V, Z)
 	return Z
 }
 
-// Differentiate
-
+// Diff erentiate
 func Diff(U PS) PS {
 	Z := NewPS()
 	go func(U, Z PS) {
-		<-Z.Req()
+		Z_req, Z_dat := Z.Into()
+		<-Z_req
 		u := U.Get()
 		if u.End() == 0 {
 			done := false
@@ -248,103 +264,105 @@ func Diff(U PS) PS {
 				if u.End() != 0 {
 					done = true
 				} else {
-					Z.Dat() <- rat.Mul(rat.NewRat(int64(i), 1), u)
-					<-Z.Req()
+					Z_dat <- big.Mul(big.NewRatI(i), u)
+					<-Z_req
 				}
 			}
 		}
-		Z.Dat() <- rat.Finis
+		Z_dat <- big.Finis
 	}(U, Z)
 	return Z
 }
 
 // Integrate, with const of integration
-func Integ(c *rat.Rat, U PS) PS {
+func Integ(c *big.Rat, U PS) PS {
 	Z := NewPS()
-	go func(c *rat.Rat, U, Z PS) {
+	go func(c *big.Rat, U, Z PS) {
+		Z_req, Z_val := Z.Into()
 		Z.Put(c)
 		done := false
 		for i := 1; !done; i++ {
-			<-Z.Req()
+			<-Z_req
 			u := U.Get()
-			if u.End() != 0 {
+			if u.End() == 0 {
+				Z_val <- big.Mul(big.NewRat1byI(i), u)
+			} else {
+				Z_val <- big.Finis
 				done = true
 			}
-			Z.Dat() <- rat.Mul(rat.NewRat(1, int64(i)), u)
 		}
-		Z.Dat() <- rat.Finis
 	}(c, U, Z)
 	return Z
 }
 
-// Binomial theorem (1+x)^c
-
-func Binom(c *rat.Rat) PS {
+// Binom ial theorem
+// and returns `(1+x)^c`
+func Binom(c *big.Rat) PS {
 	Z := NewPS()
-	go func(c *rat.Rat, Z PS) {
+	go func(c *big.Rat, Z PS) {
 		n := 1
-		t := rat.One
+		t := big.One
 		for c.Num() != 0 {
 			Z.Put(t)
-			t = rat.Mul(rat.Mul(t, c), rat.NewRat(1, int64(n)))
-			c = rat.Sub(c, rat.One)
+			t = big.Mul(big.Mul(t, c), big.NewRat1byI(n))
+			c = big.Sub(c, big.One)
 			n++
 		}
-		Z.Put(rat.Finis)
+		Z.Put(big.Finis)
 	}(c, Z)
 	return Z
 }
 
-// Reciprocal of a power series
-//	let U = u + x*UU
-//	let Z = z + x*ZZ
-//	(u+x*UU)*(z+x*ZZ) = 1
-//	z = 1/u
-//	u*ZZ + z*UU +x*UU*ZZ = 0
-//	ZZ = -UU*(z+x*ZZ)/u
-
+// Recip rocal of a power series
+//	let U = `u + x*UU`
+//	let Z = `z + x*ZZ`
+//	`(u+x*UU)*(z+x*ZZ) = 1`
+//	`z = 1/u`
+//	`u*ZZ + z*UU + x*UU*ZZ = 0`
+//
+//	ZZ = `-UU * (z + x*ZZ) /u`
 func Recip(U PS) PS {
 	Z := NewPS()
 	go func(U, Z PS) {
+		req, dat := Z.Into()
 		ZZ := NewPS2()
-		<-Z.Req()
-		z := rat.Inv(U.Get())
-		Z.Dat() <- z
-		ZZ.Split(Mul(Cmul(rat.Neg(z), U), Shift(z, ZZ[0])))
+		<-req
+		z := big.Inv(U.Get())
+		dat <- z
+		ZZ.Split(Mul(Cmul(big.Neg(z), U), Shift(z, ZZ[0])))
 		Z.Copy(ZZ[1])
 	}(U, Z)
 	return Z
 }
 
-// Exponential of a power series with constant term 0
+// Exp onential of a power series with constant term 0
 // (nonzero constant term would make nonrational coefficients)
-// bug: the constant term is simply ignored
+// BUG: the constant term is simply ignored
 //	Z = exp(U)
 //	DZ = Z*DU
 //	integrate to get Z
-
 func Exp(U PS) PS {
 	ZZ := NewPS2()
-	ZZ.Split(Integ(rat.One, Mul(ZZ[0], Diff(U))))
+	ZZ.Split(Integ(big.One, Mul(ZZ[0], Diff(U))))
 	return ZZ[1]
 }
 
-// Substitute V for x in U, where the leading term of V is zero
-//	let U = u + x*UU
-//	let V = v + x*VV
-//	then S(U,V) = u + VV*S(V,UU)
-// bug: a nonzero constant term is ignored
-
+// Subst itute V for x in U, where the leading term of V is zero
+//	let U = `u + x*UU`
+//	let V = `v + x*VV`
+//	then S(U,V) = `u + VV*S(V,UU)`
+// BUG: a nonzero constant term is ignored
 func Subst(U, V PS) PS {
 	Z := NewPS()
 	go func(U, V, Z PS) {
+		req, dat := Z.Into()
 		VV := Split(V)
-		<-Z.Req()
+		<-req
 		u := U.Get()
-		Z.Dat() <- u
+		dat <- u
 		if u.End() == 0 {
 			if VV[0].Get().End() != 0 {
-				Z.Put(rat.Finis)
+				Z.Put(big.Finis)
 			} else {
 				Z.Copy(Mul(VV[0], Subst(U, VV[1])))
 			}
@@ -353,25 +371,25 @@ func Subst(U, V PS) PS {
 	return Z
 }
 
-// Monomial Substition: U(c x^n)
-// Each Ui is multiplied by c^i and followed by n-1 zeros
-
-func MonSubst(U PS, c0 *rat.Rat, n int) PS {
+// MonSubst Monomial Substition: U(c x^n)
+// Each Ui is multiplied by `c^i` and followed by n-1 zeros
+func MonSubst(U PS, c0 *big.Rat, n int) PS {
 	Z := NewPS()
-	go func(U, Z PS, c0 *rat.Rat, n int) {
-		c := rat.One
+	go func(U, Z PS, c0 *big.Rat, n int) {
+		req, dat := Z.Into()
+		c := big.One
 		for {
-			<-Z.Req()
+			<-req
 			u := U.Get()
-			Z.Dat() <- rat.Mul(u, c)
-			c = rat.Mul(c, c0)
+			dat <- big.Mul(u, c)
+			c = big.Mul(c, c0)
 			if u.End() != 0 {
-				Z.Dat() <- rat.Finis
+				dat <- big.Finis
 				break
 			}
 			for i := 1; i < n; i++ {
-				<-Z.Req()
-				Z.Dat() <- rat.Zero
+				<-req
+				dat <- big.Zero
 			}
 		}
 	}(U, Z, c0, n)

@@ -7,7 +7,7 @@
 package dch
 
 import (
-	"github.com/GoLangsam/powser/rat"
+	"github.com/GoLangsam/ps/rat"
 )
 
 type DchPair [2]*Dch
@@ -18,11 +18,11 @@ func NewPair() (pair DchPair) {
 	return pair
 }
 
-// split reads a single demand channel and replicates its
+// Split reads a single demand channel and replicates its
 // output onto two, which may be read at different rates.
-// A process is created at first demand for a rat and dies
-// after the rat has been sent to both outputs.
-
+// A process is created at first demand and dies
+// after the data has been sent to both outputs.
+//
 // When multiple generations of split exist, the newest
 // will service requests on one channel, which is
 // always renamed to be out[0]; the oldest will service
@@ -31,7 +31,7 @@ func NewPair() (pair DchPair) {
 // out[0].  When data has finally been sent to out[1],
 // a signal on the release-wait channel tells the next newer
 // generation to begin servicing out[1].
-
+//
 func (out DchPair) Split(in *Dch) {
 	release := make(chan struct{})
 	go out.dosplit(in, release)
@@ -41,62 +41,67 @@ func (out DchPair) Split(in *Dch) {
 func (out DchPair) dosplit(in *Dch, wait <-chan struct{}) {
 	both := false // do not service both channels
 
+	reqI, datI := in.From()
+	req0, dat0 := out[0].Into()
+	req1, dat1 := out[1].Into()
+
 	select {
-	case <-out[0].req:
+	case <-req0:
 
 	case <-wait:
 		both = true
 		select {
-		case <-out[0].req:
+		case <-req0:
 
-		case <-out[1].req:
+		case <-req1: // swap
 			out[0], out[1] = out[1], out[0]
+			req0, req1 = req1, req0
+			dat0, dat1 = dat1, dat0
 		}
 	}
 
-	seqno++
-	in.req <- seqno
+	reqI <- struct{}{}
 	release := make(chan struct{})
 	go out.dosplit(in, release)
-	dat := <-in.dat
-	out[0].dat <- dat
+	dat := <-datI
+	dat0 <- dat
 	if !both {
 		<-wait
 	}
-	<-out[1].req
-	out[1].dat <- dat
+	<-req1
+	dat1 <- dat
 	release <- struct{}{}
 }
 
-// Get one rat from each of 2 demand channels
-func Get2(in DchPair) (out [2]*rat.Rat) {
+// Get a pair from a pair of demand channels
+func (in DchPair) Get() (out [2]*rat.Rat) {
 	n := len(in)
 	if n != 2 {
-		panic("bad n in getn")
+		panic("bad n in Get2")
 	}
-	req := new([2]chan int)
-	dat := new([2]chan *rat.Rat)
 
-	var i int
-	var it *rat.Rat
-	for i = 0; i < n; i++ {
-		req[i] = in[i].req
+	req := make([]chan<- struct{}, 0, n)
+	snd := make([]<-chan *rat.Rat, 0, n) // we might send here
+	dat := make([]<-chan *rat.Rat, 0, n) // we shall send here
+
+	for i := 0; i < n; i++ {
+		req[i], snd[i] = in[i].From()
 		dat[i] = nil
 	}
+
 	for n = 2 * n; n > 0; n-- {
-		seqno++
 
 		select {
-		case req[0] <- seqno:
-			dat[0] = in[0].dat
+		case req[0] <- struct{}{}:
+			dat[0] = snd[0]
 			req[0] = nil
-		case req[1] <- seqno:
-			dat[1] = in[1].dat
+		case req[1] <- struct{}{}:
+			dat[1] = snd[1]
 			req[1] = nil
-		case it = <-dat[0]:
+		case it := <-dat[0]:
 			out[0] = it
 			dat[0] = nil
-		case it = <-dat[1]:
+		case it := <-dat[1]:
 			out[1] = it
 			dat[1] = nil
 		}

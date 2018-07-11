@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package rat
+package big
 
 type Rat struct {
 	num, den int64 // numerator, denominator
@@ -37,9 +37,9 @@ func gcd(u, v int64) int64 {
 }
 
 // NewRat creates a new Rat with numerator a and denominator b.
-func NewRat(a, b int64) (r *Rat) {
+func NewRat(a, b int64) *Rat {
 	g := gcd(a, b)
-	r = new(Rat)
+	r := new(Rat)
 	if b > 0 {
 		r.num = a / g
 		r.den = b / g
@@ -48,6 +48,16 @@ func NewRat(a, b int64) (r *Rat) {
 		r.den = -b / g
 	}
 	return r
+}
+
+// NewRatI creates a new Rat `i/1` from int `i`.
+func NewRatI(i int) *Rat {
+	return NewRat(int64(i), 1)
+}
+
+// NewRat1byI creates a new Rat `1/i` from int `i`.
+func NewRat1byI(i int) *Rat {
+	return NewRat(1, int64(i))
 }
 
 var Zero *Rat

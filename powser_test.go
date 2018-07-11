@@ -9,7 +9,7 @@ package ps
 import (
 	"os"
 
-	"github.com/GoLangsam/powser/rat"
+	rat "github.com/GoLangsam/powser/big"
 )
 
 func Init() {

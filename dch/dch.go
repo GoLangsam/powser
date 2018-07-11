@@ -7,63 +7,74 @@
 package dch
 
 import (
-	"github.com/GoLangsam/powser/rat"
+	"github.com/GoLangsam/powser/big"
 )
 
+// Dch represents a demand channel
 type Dch struct {
-	req chan int
-	dat chan *rat.Rat
+	req chan struct{}
+	dat chan *big.Rat
 	nam int
-}
-
-func (in *Dch) Req() <-chan int {
-	return in.req
-}
-
-func (in *Dch) Dat() chan<- *rat.Rat {
-	return in.dat
 }
 
 var chnames string
 var chnameserial int
-var seqno int
 
 func init() {
 	chnameserial = -1
-	seqno = 0
 	chnames = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 }
 
+// New reurns a (pointer to a) fresh demand channel
 func New() *Dch {
 	c := chnameserial % len(chnames)
 	chnameserial++
 	d := new(Dch)
-	d.req = make(chan int)
-	d.dat = make(chan *rat.Rat)
+	d.req = make(chan struct{})
+	d.dat = make(chan *big.Rat)
 	d.nam = c
 	return d
 }
 
-func (out *Dch) Put(dat *rat.Rat) {
-	<-out.req
-	out.dat <- dat
+// Into returns the handshaking channels for send
+// `req` to receive a request and
+// `dat` to send data to.
+// Intended for use in `select` statements.
+func (into *Dch) Into() (req <-chan struct{}, dat chan<- *big.Rat) {
+	return into.req, into.dat
 }
 
-func (in *Dch) Get() *rat.Rat {
-	seqno++
-	in.req <- seqno
-	return <-in.dat
+// From returns the handshaking channels for receive
+// `req` to send a request and
+// `dat` to reveive data from.
+// Intended for use in `select` statements.
+func (from *Dch) From() (req chan<- struct{}, dat <-chan *big.Rat) {
+	return from.req, from.dat
 }
 
-func (out *Dch) Copy(in *Dch) {
+// Put blocks until requsted to send dat to out
+func (into *Dch) Put(dat *big.Rat) {
+	<-into.req
+	into.dat <- dat
+}
+
+// Get blocks until the requsted data can be returned
+func (from *Dch) Get() (dat *big.Rat) {
+	from.req <- struct{}{}
+	return <-from.dat
+}
+
+// Copy data from `from` into `into`
+func (into *Dch) Copy(from *Dch) {
 	for {
-		<-out.req
-		out.dat <- in.Get()
+		<-into.req
+		into.dat <- from.Get()
 	}
 }
 
-func (out *Dch) Repeat(dat *rat.Rat) {
+// Repeat keeps sending `dat` into `into`
+func (into *Dch) Repeat(dat *big.Rat) {
 	for {
-		out.Put(dat)
+		into.Put(dat)
 	}
 }
