@@ -1,4 +1,4 @@
-// Copyright 2009 The Go Authors. All rights reserved.
+// Copyright 2017 Andreas Pannewitz. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
@@ -35,12 +35,6 @@ func (U PS) Print() {
 // ===========================================================================
 // Helpers
 
-// GetVal2 each first value received from the two given power series.
-func GetVal2(U, V PS) (u, v Coefficient, oku, okv bool) {
-	pair := getValS(U, V) // TODO: must learn oks
-	return pair[0], pair[1], true, true
-}
-
 // split returns a pair of power series identical to a given power series
 func (U PS) split() PS2 {
 	UU := NewPS2()
@@ -49,17 +43,18 @@ func (U PS) split() PS2 {
 }
 
 // Append the coefficient from `from` to `U`.
-func (U PS) Append(from PS) {
-	req, in := U.Into()
+func (U PS) Append(Z PS) {
 
-	var val Coefficient
+	var c Coefficient
 	var ok bool
 	for {
-		<-req
-		if val, ok = from.Get(); !ok {
+		if !U.Req() {
 			return
 		}
-		in <- val
+		if c, ok = Z.Get(); !ok {
+			return
+		}
+		U.Snd(c)
 	}
 }
 

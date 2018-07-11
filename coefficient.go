@@ -1,4 +1,4 @@
-// Copyright 2009 The Go Authors. All rights reserved.
+// Copyright 2017 Andreas Pannewitz. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
@@ -22,9 +22,9 @@ package ps
 func AdInfinitum(c Coefficient) PS {
 	Z := NewPS()
 	go func(Z PS, c Coefficient) {
-		defer Z.Close() // TODO: it leaks
-		for {
-			Z.Put(c)
+		defer Z.Close()
+		for Z.Req() {
+			Z.Snd(c)
 		}
 	}(Z, c)
 	return Z
@@ -39,7 +39,9 @@ func Monomial(c Coefficient, n int) PS {
 
 		if !isZero(c.Num()) {
 			for ; n > 0; n-- {
-				Z.Put(aZero)
+				if !Z.Put(aZero) {
+					return
+				}
 			}
 			Z.Put(c)
 		}
@@ -76,7 +78,7 @@ func Polynom(a ...Coefficient) PS {
 		var done bool
 		j := 0
 		for j = len(a); !done && j > 0; j-- {
-			if !isZero(a[j-1].Num()) {
+			if !isZero(a[j-1].Num()) { // remove trailing zeros
 				done = true
 			}
 		}

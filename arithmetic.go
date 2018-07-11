@@ -1,4 +1,4 @@
-// Copyright 2009 The Go Authors. All rights reserved.
+// Copyright 2017 Andreas Pannewitz. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
@@ -17,22 +17,20 @@ package ps
 func Add(U, V PS) PS {
 	Z := NewPS()
 	go func(U, V, Z PS) {
-		Z_req, Z_in := Z.Into()
 		defer Z.Close()
 
 		var u, v Coefficient
 		var uok, vok bool
-		for {
-			<-Z_req
-			u, v, uok, vok = GetVal2(U, V)
+		for Z.Req() {
+			u, uok, v, vok = get2(U, V)
 			switch { // fini(u) + 2*fini(v) {
 			case uok && vok:
-				Z_in <- u.Add(u, v)
+				Z.Snd(u.Add(u, v))
 			case uok:
-				Z_in <- u
+				Z.Snd(u)
 				Z.Append(U)
 			case vok:
-				Z_in <- v
+				Z.Snd(v)
 				Z.Append(V)
 			default:
 				return
@@ -59,17 +57,15 @@ func (U PS) Plus(V ...PS) PS {
 func (U PS) Cmul(c Coefficient) PS {
 	Z := NewPS()
 	go func(c Coefficient, U, Z PS) {
-		Z_req, Z_in := Z.Into()
 		defer Z.Close()
 
 		var u Coefficient
 		var ok bool
-		for {
-			<-Z_req
+		for Z.Req() {
 			if u, ok = U.Get(); !ok {
 				return
 			}
-			Z_in <- u.Mul(c, u)
+			Z.Snd(u.Mul(c, u))
 		}
 	}(c, U, Z)
 	return Z
@@ -132,23 +128,28 @@ func (U PS) Shift(c Coefficient) PS {
 func Mul(U, V PS) PS {
 	Z := NewPS()
 	go func(U, V, Z PS) {
-		Z_req, Z_in := Z.Into()
 		defer Z.Close()
 
-		<-Z_req
-		u, v, uok, vok := GetVal2(U, V)
+		if !Z.Req() {
+			return
+		}
+		u, uok, v, vok := get2(U, V)
 		if !uok || !vok {
 			return
 		}
-		var c Coefficient
+
+		var c Coefficient // `u*v`
 		c.Mul(u, v)
-		Z_in <- c
+		Z.Snd(c)
 		UU := U.split()
 		VV := V.split()
 		W := Add(VV[0].Cmul(u), UU[0].Cmul(v))
-		<-Z_req
+
+		if !Z.Req() {
+			return
+		}
 		c, _ = W.Get()
-		Z_in <- c
+		Z.Snd(c)
 		Z.Append(W.Plus(Mul(UU[1], VV[1])))
 
 	}(U, V, Z)
@@ -172,13 +173,15 @@ func (U PS) Times(V ...PS) PS {
 func (U PS) Diff() PS {
 	Z := NewPS()
 	go func(U, Z PS) {
-		Z_req, Z_in := Z.Into()
 		defer Z.Close()
 
-		<-Z_req
+		var u Coefficient
+		var ok bool
 
-		u, ok := U.Get()
-		if !ok {
+		if !Z.Req() {
+			return
+		}
+		if u, ok = U.Get(); !ok { // constant term: drop
 			return
 		}
 
@@ -186,8 +189,10 @@ func (U PS) Diff() PS {
 			if u, ok = U.Get(); !ok {
 				return
 			}
-			Z_in <- u.Mul(ratI(i), u)
-			<-Z_req
+			Z.Snd(u.Mul(ratI(i), u))
+			if !Z.Req() {
+				return
+			}
 		}
 
 	}(U, Z)
@@ -198,7 +203,6 @@ func (U PS) Diff() PS {
 func (U PS) Integ(c Coefficient) PS {
 	Z := NewPS()
 	go func(c Coefficient, U, Z PS) {
-		Z_req, Z_in := Z.Into()
 		defer Z.Close()
 
 		Z.Put(c)
@@ -206,11 +210,13 @@ func (U PS) Integ(c Coefficient) PS {
 		var u Coefficient
 		var ok bool
 		for i := 1; ; i++ {
-			<-Z_req
+			if !Z.Req() {
+				return
+			}
 			if u, ok = U.Get(); !ok {
 				return
 			}
-			Z_in <- u.Mul(rat1byI(i), u)
+			Z.Snd(u.Mul(rat1byI(i), u))
 		}
 	}(c, U, Z)
 	return Z
@@ -224,20 +230,24 @@ func (U PS) Integ(c Coefficient) PS {
 //	`u*ZZ + z*UU + x*UU*ZZ = 0`
 //
 //	ZZ = `1/u * -UU * (z + x*ZZ)`
+//	ZZ = `1/u * (-z*UU + x*UU*ZZ)`
 func (U PS) Recip() PS {
 	Z := NewPS()
 	go func(U, Z PS) {
-		Z_req, Z_in := Z.Into()
 		defer Z.Close()
 
-		<-Z_req
-		z, ok := U.Get()
-		if !ok {
+		var z Coefficient
+		var ok bool
+
+		if !Z.Req() {
+			return
+		}
+		if z, ok = U.Get(); !ok {
 			return
 		}
 
-		z.Inv(z)
-		Z_in <- z
+		Z.Snd(z.Inv(z)) // `1/u`
+
 		var mz Coefficient
 		mz.Neg(z) // minus z `-z`
 		ZZ := NewPS2()
@@ -268,20 +278,21 @@ func (U PS) Exp() PS {
 func (U PS) Subst(V PS) PS {
 	Z := NewPS()
 	go func(U, V, Z PS) {
-		Z_req, Z_in := Z.Into()
 		defer Z.Close()
 
 		var u Coefficient
 		var ok bool
 
 		VV := V.split()
-		<-Z_req
 
+		if !Z.Req() {
+			return
+		}
 		if u, ok = U.Get(); !ok {
 			return
 		}
 
-		Z_in <- u
+		Z.Snd(u)
 
 		if _, ok = VV[0].Get(); !ok {
 			return // Note: Any nonzero constant term of `V` is ignored.
@@ -298,25 +309,25 @@ func (U PS) Subst(V PS) PS {
 func (U PS) MonSubst(c0 Coefficient, n int) PS {
 	Z := NewPS()
 	go func(U, Z PS, c0 Coefficient, n int) {
-		Z_req, Z_in := Z.Into()
 		defer Z.Close()
 
 		var u Coefficient
 		var ok bool
 		c := aOne
 		var uc Coefficient // `u * c`
-		for {
-			<-Z_req
+		for Z.Req() {
 			if u, ok = U.Get(); !ok {
 				return
 			}
 
-			Z_in <- uc.Mul(u, c)
+			Z.Snd(uc.Mul(u, c))
 			c.Mul(c, c0)
 
 			for i := 1; i < n; i++ {
-				<-Z_req
-				Z_in <- aZero
+				if !Z.Req() {
+					return
+				}
+				Z.Snd(aZero)
 			}
 		}
 	}(U, Z, c0, n)
