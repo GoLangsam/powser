@@ -33,8 +33,9 @@ func New() *Dch {
 
 // DchMakeBuff returns
 // a (pointer to a) fresh
-// buffered (with capacity=`cap`)
-// mode channel.
+// buffered
+// demand channel
+// (with capacity=`cap`).
 func DchMakeBuff(cap int) *Dch {
 	d := Dch{
 		ch:  make(chan *big.Rat, cap),
@@ -43,10 +44,12 @@ func DchMakeBuff(cap int) *Dch {
 	return &d
 }
 
+// ---------------------------------------------------------------------------
+
 // Get is the comma-ok multi-valued form to receive and
 // reports whether a received value was sent before the *big.Rat channel was closed.
 //
-// Get blocks until the requst is accepted and value `val` has been received from `from`.
+// Get blocks until the request is accepted and value `val` has been received from `from`.
 func (from *Dch) Get() (val *big.Rat, open bool) {
 	from.req <- struct{}{}
 	val, open = <-from.ch
@@ -55,8 +58,14 @@ func (from *Dch) Get() (val *big.Rat, open bool) {
 
 // Drop is to be called by a consumer when finished requesting.
 // The request channel is closed in order to broadcast this.
+//
+// In order to avoid deadlock, pending sends are drained.
 func (from *Dch) Drop() {
 	close(from.req)
+	go func(from *Dch) {
+		for _ = range from.ch {
+		} // drain values - there could be some
+	}(from)
 }
 
 // From returns the handshaking channels
@@ -68,11 +77,26 @@ func (from *Dch) From() (req chan<- struct{}, rcv <-chan *big.Rat) {
 	return from.req, from.ch
 }
 
+// ---------------------------------------------------------------------------
+
+// GetNextFrom `from` for `into` and report success.
+// Follow it with `into.Send( f(val) )`, if ok.
+func (into *Dch) GetNextFrom(from *Dch) (val *big.Rat, ok bool) {
+	if ok = into.Next(); ok {
+		val, ok = from.Get()
+	}
+	if !ok {
+		from.Drop()
+		into.Close()
+	}
+	return
+}
+
 // Next is the request method.
 // It returns when a request was received
-// and reports iff the request channel was open.
+// and reports whether the request channel was open.
 //
-// Next blocks until a requsted is received.
+// Next blocks until a requested is received.
 //
 // A sucessful Next is to be followed by one Send(v).
 func (into *Dch) Next() bool {
@@ -91,7 +115,7 @@ func (into *Dch) Send(val *big.Rat) {
 // Put is a convenience for
 //  if Req() { Snd(v) }
 //
-// Put blocks until requsted to send value `val` into `into`.
+// Put blocks until requested to send value `val` into `into`.
 func (into *Dch) Put(val *big.Rat) bool {
 	_, ok := <-into.req
 	if ok {
@@ -115,8 +139,17 @@ func (into *Dch) Into() (req <-chan struct{}, snd chan<- *big.Rat) {
 // In order to avoid deadlock, pending requests are drained.
 func (into *Dch) Close() {
 	close(into.ch)
-	for _ = range into.req {
-	} // drain requests - there could be some
+	go func(into *Dch) {
+		for _ = range into.req {
+		} // drain requests - there could be some
+	}(into)
+}
+
+// ---------------------------------------------------------------------------
+
+// MyDch returns itself.
+func (c *Dch) MyDch() *Dch {
+	return c
 }
 
 // Cap reports the capacity of the underlying *big.Rat channel.

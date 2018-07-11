@@ -62,8 +62,10 @@ func (from *Dch) Get() (val *big.Rat, open bool) {
 // In order to avoid deadlock, pending sends are drained.
 func (from *Dch) Drop() {
 	close(from.req)
-	for _ = range from.ch {
-	} // drain values - there could be some
+	go func(from *Dch) {
+		for _ = range from.ch {
+		} // drain values - there could be some
+	}(from)
 }
 
 // From returns the handshaking channels
@@ -137,8 +139,10 @@ func (into *Dch) Into() (req <-chan struct{}, snd chan<- *big.Rat) {
 // In order to avoid deadlock, pending requests are drained.
 func (into *Dch) Close() {
 	close(into.ch)
-	for _ = range into.req {
-	} // drain requests - there could be some
+	go func(into *Dch) {
+		for _ = range into.req {
+		} // drain requests - there could be some
+	}(into)
 }
 
 // ---------------------------------------------------------------------------
