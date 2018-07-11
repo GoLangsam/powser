@@ -31,20 +31,4 @@ func rat1byI(i int) Coefficient {
 	return NewCoefficient(1, int64(i))
 }
 
-// fini is the end test.
-//   fini == 1 <=> atEnd
-//   fini == 0 <=> !atEnd
-// Usefuly for multi-argument `switch` cases.
-func fini(u Coefficient) int {
-	if isZero(u.Denom()) {
-		return 1
-	}
-	return 0
-}
-
-// atEnd is the end test.
-func atEnd(u Coefficient) bool {
-	return isZero(u.Denom())
-}
-
 // ===========================================================================

@@ -5,11 +5,11 @@
 package ps
 
 import (
-	"math/big"
+	// "math/big"
 
-	// "github.com/GoLangsam/powser/big"
-	// "github.com/GoLangsam/powser/dch.rat"
-	"github.com/GoLangsam/powser/dch.big"
+	"github.com/GoLangsam/ps/big"
+	"github.com/GoLangsam/ps/dch.rat"
+	// "github.com/GoLangsam/ps/dch.big"
 )
 
 // ===========================================================================
@@ -23,16 +23,16 @@ func NewCoefficient(a, b int64) Coefficient {
 }
 
 // integer represents the result of r.Nom() & r.Denum()
-type integer = *big.Int
+type integer = int64
 
 func isZero(x integer) bool {
-	// return x == 0
-	return x.Cmp(big.NewInt(0)) == 0
+	return x == 0
+	// return x.Cmp(big.NewInt(0)) == 0
 }
 
 func asFloat64(x integer) float64 {
-	// return float64(x)
-	return float64(x.Int64())
+	return float64(x)
+	// return float64(x.Int64())
 }
 
 // PS represents a power series as a demand channel

@@ -20,7 +20,7 @@ package ps
 // a signal on the release-wait channel tells the next newer
 // generation to begin servicing out[1].
 //
-func (out PS2) Split(in PS) {
+func (out PS2) split(in PS) {
 	release := make(chan struct{})
 	go out.dosplit(in, release)
 	release <- struct{}{}

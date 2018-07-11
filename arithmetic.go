@@ -21,19 +21,20 @@ func Add(U, V PS) PS {
 		defer Z.Close()
 
 		var u, v Coefficient
+		var uok, vok bool
 		for {
 			<-Z_req
-			u, v = GetVal2(U, V)
-			switch fini(u) + 2*fini(v) {
-			case 0:
+			u, v, uok, vok = GetVal2(U, V)
+			switch { // fini(u) + 2*fini(v) {
+			case uok && vok:
 				Z_in <- u.Add(u, v)
-			case 1:
-				Z_in <- v
-				Z.Append(V)
-			case 2:
+			case uok:
 				Z_in <- u
 				Z.Append(U)
-			case 3:
+			case vok:
+				Z_in <- v
+				Z.Append(V)
+			default:
 				return
 			}
 		}
@@ -135,15 +136,15 @@ func Mul(U, V PS) PS {
 		defer Z.Close()
 
 		<-Z_req
-		u, v := GetVal2(U, V)
-		if atEnd(u) || atEnd(v) {
+		u, v, uok, vok := GetVal2(U, V)
+		if !uok || !vok {
 			return
 		}
 		var c Coefficient
 		c.Mul(u, v)
 		Z_in <- c
-		UU := U.Split()
-		VV := V.Split()
+		UU := U.split()
+		VV := V.split()
 		W := Add(VV[0].Cmul(u), UU[0].Cmul(v))
 		<-Z_req
 		c, _ = W.Get()
@@ -240,7 +241,7 @@ func (U PS) Recip() PS {
 		var mz Coefficient
 		mz.Neg(z) // minus z `-z`
 		ZZ := NewPS2()
-		ZZ.Split(Mul(U.Cmul(mz), ZZ[0].Shift(z)))
+		ZZ.split(Mul(U.Cmul(mz), ZZ[0].Shift(z)))
 		Z.Append(ZZ[1])
 
 	}(U, Z)
@@ -255,7 +256,7 @@ func (U PS) Recip() PS {
 // Note: The constant term is simply ignored.
 func (U PS) Exp() PS {
 	ZZ := NewPS2()
-	ZZ.Split(Mul(ZZ[0], U.Diff()).Integ(aOne))
+	ZZ.split(Mul(ZZ[0], U.Diff()).Integ(aOne))
 	return ZZ[1]
 }
 
@@ -273,7 +274,7 @@ func (U PS) Subst(V PS) PS {
 		var u Coefficient
 		var ok bool
 
-		VV := V.Split()
+		VV := V.split()
 		<-Z_req
 
 		if u, ok = U.Get(); !ok {

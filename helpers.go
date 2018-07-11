@@ -36,15 +36,15 @@ func (U PS) Print() {
 // Helpers
 
 // GetVal2 each first value received from the two given power series.
-func GetVal2(U, V PS) (u, v Coefficient) {
-	pair := getValS(U, V)
-	return pair[0], pair[1]
+func GetVal2(U, V PS) (u, v Coefficient, oku, okv bool) {
+	pair := getValS(U, V) // TODO: must learn oks
+	return pair[0], pair[1], true, true
 }
 
-// Split returns a pair of power series identical to a given power series
-func (U PS) Split() PS2 {
+// split returns a pair of power series identical to a given power series
+func (U PS) split() PS2 {
 	UU := NewPS2()
-	go UU.Split(U)
+	go UU.split(U)
 	return UU
 }
 
