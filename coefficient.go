@@ -21,11 +21,12 @@ package ps
 // and returns `c^i`.
 func AdInfinitum(c Coefficient) PS {
 	Z := NewPS()
-	go func(c Coefficient, Z PS) {
+	go func(Z PS, c Coefficient) {
+		defer Z.Close() // TODO: it leaks
 		for {
 			Z.Put(c)
 		}
-	}(c, Z)
+	}(Z, c)
 	return Z
 }
 
@@ -33,15 +34,16 @@ func AdInfinitum(c Coefficient) PS {
 // returns `c * x^n`.
 func Monomial(c Coefficient, n int) PS {
 	Z := NewPS()
-	go func(c Coefficient, n int, Z PS) {
-		if c.Num() != 0 {
+	go func(Z PS, c Coefficient, n int) {
+		defer Z.Close()
+
+		if !isZero(c.Num()) {
 			for ; n > 0; n-- {
 				Z.Put(aZero)
 			}
 			Z.Put(c)
 		}
-		Z.Put(finis)
-	}(c, n, Z)
+	}(Z, c, n)
 	return Z
 }
 
@@ -49,17 +51,18 @@ func Monomial(c Coefficient, n int) PS {
 // and returns `(1+x)^c`.
 func Binomial(c Coefficient) PS {
 	Z := NewPS()
-	go func(c Coefficient, Z PS) {
+	go func(Z PS, c Coefficient) {
+		defer Z.Close()
+
 		n := 1
 		t := aOne
-		for c.Num() != 0 {
+		for !isZero(c.Num()) {
 			Z.Put(t)
 			t.Mul(t.Mul(t, c), rat1byI(n))
 			c.Sub(c, aOne)
 			n++
 		}
-		Z.Put(finis)
-	}(c, Z)
+	}(Z, c)
 	return Z
 }
 
@@ -68,10 +71,12 @@ func Binomial(c Coefficient) PS {
 func Polynom(a ...Coefficient) PS {
 	Z := NewPS()
 	go func(Z PS, a ...Coefficient) {
+		defer Z.Close()
+
 		var done bool
 		j := 0
 		for j = len(a); !done && j > 0; j-- {
-			if a[j-1].Num() != 0 {
+			if !isZero(a[j-1].Num()) {
 				done = true
 			}
 		}
@@ -79,8 +84,6 @@ func Polynom(a ...Coefficient) PS {
 		for i := 0; i < j; i++ {
 			Z.Put(a[i])
 		}
-
-		Z.Put(finis)
 	}(Z, a...)
 	return Z
 }

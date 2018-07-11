@@ -28,7 +28,7 @@ func eq(x, y Coefficient) bool {
 
 func check(U PS, c Coefficient, count int, str string) {
 	for i := 0; i < count; i++ {
-		r := U.Get()
+		r, _ := U.Get()
 		if !eq(r, c) {
 			fmt.Print("got: ")
 			fmt.Print(r.String())

@@ -4,8 +4,8 @@
 
 // Package big implements arithmetic on rational numbers
 // as a subset of the methods of "math/big":
-// Num, Denom, Set, String
-// Add, Mul, Sub, Neg.
+//  Num, Denom, Set, String
+//  Add, Mul, Sub, Neg.
 // Nominator and Denominator are int64.
 package big
 

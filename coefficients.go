@@ -12,7 +12,6 @@ var (
 	aOne      Coefficient
 	aTwo      Coefficient
 	aMinusOne Coefficient
-	finis     Coefficient // End mark and end test
 )
 
 func init() {
@@ -20,7 +19,6 @@ func init() {
 	aOne = NewCoefficient(1, 1)
 	aTwo = NewCoefficient(2, 1)
 	aMinusOne = NewCoefficient(-1, 1) // aMinusOne.Neg(aOne) raises `nil` exception ?!?
-	finis = NewCoefficient(1, 0)
 }
 
 // ratI creates a new Rat `i/1` from int `i`.
@@ -38,7 +36,7 @@ func rat1byI(i int) Coefficient {
 //   fini == 0 <=> !atEnd
 // Usefuly for multi-argument `switch` cases.
 func fini(u Coefficient) int {
-	if u.Denom() == 0 {
+	if isZero(u.Denom()) {
 		return 1
 	}
 	return 0
@@ -46,7 +44,7 @@ func fini(u Coefficient) int {
 
 // atEnd is the end test.
 func atEnd(u Coefficient) bool {
-	return u.Denom() == 0
+	return isZero(u.Denom())
 }
 
 // ===========================================================================

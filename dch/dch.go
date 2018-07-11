@@ -48,8 +48,14 @@ func (into *Dch) Put(val *big.Rat) {
 	into.dat <- val
 }
 
-// Get blocks until the requsted value `val` can be received from `from`.
-func (from *Dch) Get() (val *big.Rat) {
+// Get blocks until the requst is accepted and value `val` has been received from `from`.
+func (from *Dch) Get() (val *big.Rat, ok bool) {
 	from.req <- struct{}{}
-	return <-from.dat
+	val, ok = <-from.dat
+	return
+}
+
+// Close closes the underlying channel
+func (into *Dch) Close() {
+	close(into.dat)
 }

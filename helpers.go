@@ -15,16 +15,16 @@ package ps
 
 // Printn prints n terms of a power series.
 func (U PS) Printn(n int) {
-	done := false
-	for ; !done && n > 0; n-- {
-		u := U.Get()
-		if atEnd(u) {
-			done = true
-		} else {
-			print(u.String())
+	defer print(("\n"))
+
+	var u Coefficient
+	var ok bool
+	for ; n > 0; n-- {
+		if u, ok = U.Get(); !ok {
+			return
 		}
+		print(u.String())
 	}
-	print(("\n"))
 }
 
 // Print one billion terms.
@@ -51,9 +51,15 @@ func (U PS) Split() PS2 {
 // Append the coefficient from `from` to `U`.
 func (U PS) Append(from PS) {
 	req, in := U.Into()
+
+	var val Coefficient
+	var ok bool
 	for {
 		<-req
-		in <- from.Get()
+		if val, ok = from.Get(); !ok {
+			return
+		}
+		in <- val
 	}
 }
 
@@ -62,24 +68,28 @@ func (U PS) Eval(c Coefficient, n int) Coefficient {
 	if n == 0 {
 		return aZero
 	}
-	y := U.Get()
-	if atEnd(y) {
+
+	var u Coefficient
+	var ok bool
+	if u, ok = U.Get(); !ok {
 		return aZero
 	}
-	return y.Add(y, c.Mul(c, U.Eval(c, n-1)))
+	return u.Add(u, c.Mul(c, U.Eval(c, n-1)))
 }
 
 // Evaln evaluates PS at `x=c` to n terms in floating point.
 func (U PS) Evaln(c Coefficient, n int) float64 {
 	xn := float64(1)
-	x := float64(c.Num()) / float64(c.Denom())
+	x := asFloat64(c.Num()) / asFloat64(c.Denom())
 	val := float64(0)
+
+	var u Coefficient
+	var ok bool
 	for i := 0; i < n; i++ {
-		u := U.Get()
-		if atEnd(u) {
+		if u, ok = U.Get(); !ok {
 			break
 		}
-		val = val + x*float64(u.Num())/float64(u.Denom())
+		val = val + x*asFloat64(u.Num())/asFloat64(u.Denom())
 		xn = xn * x
 	}
 	return val
