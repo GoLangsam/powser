@@ -36,27 +36,23 @@ func gcd(u, v int64) int64 {
 	return gcd(v%u, u)
 }
 
-// Make a rational from two ints and from one int
-
-func I2toR(u, v int64) *Rat {
-	g := gcd(u, v)
-	r := new(Rat)
-	if v > 0 {
-		r.num = u / g
-		r.den = v / g
+// NewRat creates a new Rat with numerator a and denominator b.
+func NewRat(a, b int64) (r *Rat) {
+	g := gcd(a, b)
+	r = new(Rat)
+	if b > 0 {
+		r.num = a / g
+		r.den = b / g
 	} else {
-		r.num = -u / g
-		r.den = -v / g
+		r.num = -a / g
+		r.den = -b / g
 	}
 	return r
 }
 
-func ItoR(u int64) *Rat {
-	return I2toR(u, 1)
-}
-
 var Zero *Rat
 var One *Rat
+var Two *Rat
 var MinusOne *Rat
 
 // End mark and end test
@@ -64,10 +60,11 @@ var MinusOne *Rat
 var Finis *Rat
 
 func init() {
-	Zero = ItoR(0)
-	One = ItoR(1)
+	Zero = NewRat(0, 1)
+	One = NewRat(1, 1)
+	Two = NewRat(2, 1)
 	MinusOne = Neg(One)
-	Finis = I2toR(1, 0)
+	Finis = NewRat(1, 0)
 }
 
 // End mark and end test
@@ -80,31 +77,36 @@ func (u *Rat) End() int64 {
 
 // Operations on rationals
 
-func Add(u, v *Rat) *Rat {
-	g := gcd(u.den, v.den)
-	return I2toR(u.num*(v.den/g)+v.num*(u.den/g), u.den*(v.den/g))
+// Add sets z to the sum x+y and returns z.
+func Add(x, y *Rat) *Rat {
+	g := gcd(x.den, y.den)
+	return NewRat(x.num*(y.den/g)+y.num*(x.den/g), x.den*(y.den/g))
 }
 
-func Mul(u, v *Rat) *Rat {
-	g1 := gcd(u.num, v.den)
-	g2 := gcd(u.den, v.num)
+// Mul sets z to the product x*y and returns z.
+func Mul(x, y *Rat) *Rat {
+	g1 := gcd(x.num, y.den)
+	g2 := gcd(x.den, y.num)
 	r := new(Rat)
-	r.num = (u.num / g1) * (v.num / g2)
-	r.den = (u.den / g2) * (v.den / g1)
+	r.num = (x.num / g1) * (y.num / g2)
+	r.den = (x.den / g2) * (y.den / g1)
 	return r
 }
 
-func Neg(u *Rat) *Rat {
-	return I2toR(-u.num, u.den)
+// Neg sets z to -x and returns z.
+func Neg(x *Rat) *Rat {
+	return NewRat(-x.num, x.den)
 }
 
-func Sub(u, v *Rat) *Rat {
-	return Add(u, Neg(v))
+// Sub sets z to the difference x-y and returns z.
+func Sub(x, y *Rat) *Rat {
+	return Add(x, Neg(y))
 }
 
-func Inv(u *Rat) *Rat { // invert a rat
-	if u.num == 0 {
+// Inv sets z to 1/x and returns z.
+func Inv(x *Rat) *Rat { // invert a rat
+	if x.num == 0 {
 		panic("zero divide in inv")
 	}
-	return I2toR(u.den, u.num)
+	return NewRat(x.den, x.num)
 }
