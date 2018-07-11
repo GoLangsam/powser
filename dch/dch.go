@@ -10,13 +10,13 @@ import (
 	"github.com/GoLangsam/powser/big"
 )
 
-// Dch represents a demand channel
+// Dch represents a demand channel.
 type Dch struct {
 	req chan struct{}
 	dat chan *big.Rat
 }
 
-// New reurns a (pointer to a) fresh demand channel
+// New reurns a (pointer to a) fresh demand channel.
 func New() *Dch {
 	d := new(Dch)
 	d.req = make(chan struct{})
@@ -24,30 +24,32 @@ func New() *Dch {
 	return d
 }
 
-// Into returns the handshaking channels for send
-// `req` to receive a request and
-// `dat` to send data to.
-// Intended for use in `select` statements.
-func (into *Dch) Into() (req <-chan struct{}, dat chan<- *big.Rat) {
+// Into returns the handshaking channels
+// (for use in `select` statements)
+// to send values:
+//  `req` to receive a request `<-req` and
+//  `snd` to send such requested value into.
+func (into *Dch) Into() (req <-chan struct{}, snd chan<- *big.Rat) {
 	return into.req, into.dat
 }
 
-// From returns the handshaking channels for receive
-// `req` to send a request and
-// `dat` to reveive data from.
-// Intended for use in `select` statements.
-func (from *Dch) From() (req chan<- struct{}, dat <-chan *big.Rat) {
+// From returns the handshaking channels
+// (for use in `select` statements)
+// to receive values:
+//  `req` to send a request `req <- struct{}{}` and
+//  `rcv` to reveive such requested value from.
+func (from *Dch) From() (req chan<- struct{}, rcv <-chan *big.Rat) {
 	return from.req, from.dat
 }
 
-// Put blocks until requsted to send dat to out
-func (into *Dch) Put(dat *big.Rat) {
+// Put blocks until requsted to send value `val` into `into`.
+func (into *Dch) Put(val *big.Rat) {
 	<-into.req
-	into.dat <- dat
+	into.dat <- val
 }
 
-// Get blocks until the requsted data can be returned
-func (from *Dch) Get() (dat *big.Rat) {
+// Get blocks until the requsted value `val` can be received from `from`.
+func (from *Dch) Get() (val *big.Rat) {
 	from.req <- struct{}{}
 	return <-from.dat
 }

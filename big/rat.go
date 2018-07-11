@@ -6,7 +6,6 @@
 // as a subset of the methods of "math/big":
 // Num, Denom, Set, String
 // Add, Mul, Sub, Neg.
-// There is Eq, but no Cmp.
 // Nominator and Denominator are int64.
 package big
 
@@ -21,11 +20,6 @@ func (x *Rat) Num() int64 { return x.num }
 
 // Denom returns the denominator of x; it is always > 0.
 func (x *Rat) Denom() int64 { return x.den }
-
-// Eq discriminates iff x is equal to c.
-func (x *Rat) Eq(c *Rat) bool {
-	return x.num == c.num && x.den == c.den
-}
 
 // gcd needed for rational arithmetic
 func gcd(u, v int64) int64 {
@@ -50,42 +44,6 @@ func NewRat(a, b int64) *Rat {
 		r.den = -b / g
 	}
 	return r
-}
-
-// NewRatI creates a new Rat `i/1` from int `i`.
-func NewRatI(i int) *Rat {
-	return NewRat(int64(i), 1)
-}
-
-// NewRat1byI creates a new Rat `1/i` from int `i`.
-func NewRat1byI(i int) *Rat {
-	return NewRat(1, int64(i))
-}
-
-var Zero *Rat
-var One *Rat
-var Two *Rat
-var MinusOne *Rat
-
-// End mark and end test
-
-var Finis *Rat
-
-func init() {
-	Zero = NewRat(0, 1)
-	One = NewRat(1, 1)
-	Two = NewRat(2, 1)
-	// MinusOne.Neg(One) raises `nil` exception ?!?
-	MinusOne = NewRat(-1, 1)
-	Finis = NewRat(1, 0)
-}
-
-// End mark and end test
-func (u *Rat) End() int64 {
-	if u.den == 0 {
-		return 1
-	}
-	return 0
 }
 
 // Set sets `z` to `x` (by making a copy of `x`) and returns `z`.

@@ -2,30 +2,28 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Test concurrency primitives: power series.
-
 package ps
 
-import (
-	"github.com/GoLangsam/powser/big"
-)
+// ===========================================================================
 
-// GetValS returns an array with each first value received from the given power series.
+// getValS returns a slice with each first value received from the given power series.
 //
 // BUG: As of now, it works for pairs only!
-func (in PS2) GetValS() (out [2]*big.Rat) {
+func getValS(in ...PS) []Coefficient {
 	n := len(in)
 	if n != 2 {
-		panic("bad n in Get2")
+		panic("getValS must have exactly 2 arguments")
 	}
 
-	req := make([]chan<- struct{}, 0, n)
-	snd := make([]<-chan *big.Rat, 0, n) // we might send here
-	dat := make([]<-chan *big.Rat, 0, n) // we shall send here
+	req := make([]chan<- struct{}, 0, n)    // we request here - initially
+	snd := make([]<-chan Coefficient, 0, n) // we might receive here
+	dat := make([]<-chan Coefficient, 0, n) // we shall receive here
+	out := make([]Coefficient, 0, n)        // the values to be returned
 
 	for i := 0; i < n; i++ {
 		req[i], snd[i] = in[i].From()
 		dat[i] = nil
+		out[i] = NewCoefficient(0, 0)
 	}
 
 	for n = 2 * n; n > 0; n-- {
@@ -49,3 +47,5 @@ func (in PS2) GetValS() (out [2]*big.Rat) {
 	}
 	return out
 }
+
+// ===========================================================================
