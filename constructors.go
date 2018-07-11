@@ -23,8 +23,8 @@ func AdInfinitum(c Coefficient) PS {
 	Z := NewPS()
 	go func(Z PS, c Coefficient) {
 		defer Z.Close()
-		for Z.Req() {
-			Z.Snd(c)
+		for Z.Next() {
+			Z.Send(c)
 		}
 	}(Z, c)
 	return Z
