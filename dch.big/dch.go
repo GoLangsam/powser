@@ -55,8 +55,12 @@ func (from *Dch) Get() (val *big.Rat, open bool) {
 
 // Drop is to be called by a consumer when finished requesting.
 // The request channel is closed in order to broadcast this.
+//
+// In order to avoid deadlock, pending sends are drained.
 func (from *Dch) Drop() {
 	close(from.req)
+	for _ = range from.ch {
+	} // drain values - there could be some
 }
 
 // From returns the handshaking channels
