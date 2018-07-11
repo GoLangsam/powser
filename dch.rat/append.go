@@ -12,12 +12,12 @@ func (into *Dch) Append(from *Dch) {
 		from.Drop()
 		into.Close()
 	}()
-	into.AppendOnly(from)
+	into.append(from)
 }
 
-// AppendOnly synchronously from `from` into `into`
+// append synchronously from `from` into `into`
 // without cleanup of handshaking resources.
-func (into *Dch) AppendOnly(from *Dch) {
+func (into *Dch) append(from *Dch) {
 	for into.Next() {
 		if c, ok := from.Get(); ok {
 			into.Send(c)

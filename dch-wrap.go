@@ -14,12 +14,6 @@ func (Into PS) Append(From PS) {
 	Into.MyDch().Append(From.MyDch())
 }
 
-// append all coefficients from `From` into `Into`.
-// without cleanup of handshaking resources.
-func (Into PS) append(From PS) {
-	Into.MyDch().AppendOnly(From.MyDch())
-}
-
 // GetNextFrom `From` for `Into` and report success.
 // Follow with `Into.Send( f(c) )`, iff ok.
 func (Into PS) GetNextFrom(From PS) (c Coefficient, ok bool) {
