@@ -15,8 +15,8 @@ import (
 // together with their respective ok boolean.
 func (from *Dch) GetWith(with *Dch) (valFrom *big.Rat, okFrom bool, valWith *big.Rat, okWith bool) {
 
-	reqFrom, sndFrom := from.From()
-	reqWith, sndWith := with.From()
+	reqFrom, sndFrom := from.req, from.ch
+	reqWith, sndWith := with.req, with.ch
 	datFrom, datWith := sndFrom, sndWith
 	datFrom, datWith = nil, nil // block receives initially
 

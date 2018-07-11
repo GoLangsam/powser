@@ -46,8 +46,8 @@ func DchMakeBuff(cap int) *Dch {
 
 // ---------------------------------------------------------------------------
 
-// Get is the comma-ok multi-valued form to receive and
-// reports whether a received value was sent before the *big.Rat channel was closed.
+// Get is the comma-ok multi-valued form to receive from the channel and
+// reports whether a received value was sent before the channel was closed.
 //
 // Get blocks until the request is accepted and value `val` has been received from `from`.
 func (from *Dch) Get() (val *big.Rat, open bool) {
@@ -113,7 +113,7 @@ func (into *Dch) Send(val *big.Rat) {
 // - aka "myAnyChan <- myAny".
 //
 // Put is a convenience for
-//  if Req() { Snd(v) }
+//  if Next() { Send(v) }
 //
 // Put blocks until requested to send value `val` into `into`.
 func (into *Dch) Put(val *big.Rat) bool {
@@ -134,7 +134,7 @@ func (into *Dch) Into() (req <-chan struct{}, snd chan<- *big.Rat) {
 }
 
 // Close is to be called by a producer when finished sending.
-// The *big.Rat channel is closed in order to broadcast this.
+// The value channel is closed in order to broadcast this.
 //
 // In order to avoid deadlock, pending requests are drained.
 func (into *Dch) Close() {
@@ -152,12 +152,12 @@ func (c *Dch) MyDch() *Dch {
 	return c
 }
 
-// Cap reports the capacity of the underlying *big.Rat channel.
+// Cap reports the capacity of the underlying value channel.
 func (c *Dch) Cap() int {
 	return cap(c.ch)
 }
 
-// Len reports the length of the underlying *big.Rat channel.
+// Len reports the length of the underlying value channel.
 func (c *Dch) Len() int {
 	return len(c.ch)
 }

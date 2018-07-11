@@ -9,15 +9,15 @@ package dch
 // Split returns a pair of power series identical to (the current remainder of) a given power series.
 func (from *Dch) Split() [2]*Dch {
 	pair := [2]*Dch{New(), New()}
-	return from.SplitUs(pair[0], pair[1])
+	from.SplitUs(pair[0], pair[1])
+	return pair
 }
 
 // SplitUs from `from` into two given demand channels.
-func (from *Dch) SplitUs(into1, into2 *Dch) [2]*Dch {
+func (from *Dch) SplitUs(into1, into2 *Dch) {
 	release := make(chan struct{})
 	go from.split(into1, into2, release)
 	close(release)
-	return [2]*Dch{into1, into2}
 }
 
 // ===========================================================================
@@ -45,8 +45,8 @@ func (from *Dch) SplitUs(into1, into2 *Dch) [2]*Dch {
 // the last living process will append `inp` to `out2`.
 func (from *Dch) split(out1, out2 *Dch, wait <-chan struct{}) {
 
-	req1, _ := out1.Into()
-	req2, _ := out2.Into()
+	req1 := out1.req
+	req2 := out2.req
 
 	both := false // do not service both channels before <-wait
 	req := false  // got valid request?
