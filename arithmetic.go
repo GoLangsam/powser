@@ -13,10 +13,10 @@ package ps
 // Input variables:  From U,V,...
 // Output variables: Into ...,Y,Z
 
-// Add two power series.
-func Add(U, V PS) PS {
-	Z := U.New()
-	go func(U, V, Z PS) {
+// add two power series.
+func add(U, V PS) PS {
+	Z := U.new()
+	go func(Z PS, U, V PS) {
 		defer func() {
 			U.Drop()
 			V.Drop()
@@ -30,7 +30,7 @@ func Add(U, V PS) PS {
 			}
 			Z.Send(aC().Add(u, v)) // `u + v`
 		}
-	}(U, V, Z)
+	}(Z, U, V)
 	return Z
 }
 
@@ -42,15 +42,15 @@ func (U PS) Plus(V ...PS) PS {
 	case 0:
 		return U
 	case 1:
-		return Add(U, V[0])
+		return add(U, V[0])
 	default:
-		return Add(U, V[0]).Plus(V[1:]...)
+		return add(U, V[0]).Plus(V[1:]...)
 	}
 }
 
-// Minus subtracts `V` from `U`
+// minus subtracts `V` from `U`
 // and returns `U + (-1)*V`
-func (U PS) Minus(V PS) PS {
+func (U PS) minus(V PS) PS {
 	return U.Plus(V.CMul(aMinusOne()))
 }
 
@@ -62,33 +62,33 @@ func (U PS) Less(V ...PS) PS {
 	case 0:
 		return U
 	case 1:
-		return U.Minus(V[0])
+		return U.minus(V[0])
 	default:
-		return U.Minus(V[0]).Less(V[1:]...)
+		return U.minus(V[0]).Less(V[1:]...)
 	}
 }
 
 // CMul multiplies `U` by a constant `c`
 // and returns `c*U`.
 func (U PS) CMul(c Coefficient) PS {
-	Z := U.New()
-	go func(c Coefficient, U, Z PS) {
+	Z := U.new()
+	go func(Z PS, U PS, c Coefficient) {
 		for Z.SendCfnFrom(U, cMul(c)) { // `c * u`
 		}
-	}(c, U, Z)
+	}(Z, U, c)
 	return Z
 }
 
 // MonMul multiplies `U` by the monomial "x^n"
 // and returns `x^n * U`.
 func (U PS) MonMul(n int) PS {
-	Z := U.New()
-	go func(n int, U PS, Z PS) {
+	Z := U.new()
+	go func(Z PS, U PS, n int) {
 		for ; n > 0; n-- {
 			Z.Put(aZero())
 		}
 		Z.Append(U)
-	}(n, U, Z)
+	}(Z, U, n)
 	return Z
 }
 
@@ -101,23 +101,21 @@ func (U PS) XMul() PS {
 
 // Shift returns `c + x*U`
 func (U PS) Shift(c Coefficient) PS {
-	Z := U.New()
-	go func(c Coefficient, U, Z PS) {
+	Z := U.new()
+	go func(Z PS, U PS, c Coefficient) {
 		Z.Put(c)
 		Z.Append(U)
-	}(c, U, Z)
+	}(Z, U, c)
 	return Z
 }
 
-// simple pole at 1: 1/(1-x) = 1 1 1 1 1 ...
-
-// Mul multiplies. The algorithm is
+// mul multiplies. The algorithm is:
 //	let U = `u + x*UU`
 //	let V = `v + x*VV`
 //	then UV = `u*v + x*(u*VV+v*UU) + x*x*UU*VV`
-func Mul(U, V PS) PS {
-	Z := U.New()
-	go func(U, V, Z PS) {
+func mul(U, V PS) PS {
+	Z := U.new()
+	go func(Z PS, U, V PS) {
 		var u, v Coefficient
 		var next, okU, okV bool
 
@@ -134,11 +132,11 @@ func Mul(U, V PS) PS {
 
 		Z.Send(aC().Mul(u, v))                 // `u*v`
 		UU, VV := U.Split(), V.Split()         // `UU`, `VV`
-		W := Add(VV[0].CMul(u), UU[0].CMul(v)) // `u*VV + v*UU`
+		W := VV[0].CMul(u).Plus(UU[0].CMul(v)) // `u*VV + v*UU`
 		if Z.SendCfnFrom(W, cSame()) {         // ` + x*(u*VV+v*UU)`
-			Z.Append(W.Plus(Mul(UU[1], VV[1]))) // `+ x*x*UU*VV`
+			Z.Append(W.Plus(UU[1].Times(VV[1]))) // `+ x*x*UU*VV` - recurse
 		}
-	}(U, V, Z)
+	}(Z, U, V)
 	return Z
 }
 
@@ -150,23 +148,23 @@ func (U PS) Times(V ...PS) PS {
 	case 0:
 		return U
 	case 1:
-		return Mul(U, V[0])
+		return mul(U, V[0])
 	default:
-		return Mul(U, V[0]).Times(V[1:]...)
+		return mul(U, V[0]).Times(V[1:]...)
 	}
 }
 
 // Deriv differentiates `U`
 // and returns the derivative.
 func (U PS) Deriv() PS {
-	Z := U.New()
-	go func(U, Z PS) {
+	Z := U.new()
+	go func(Z PS, U PS) {
 		if _, ok := Z.GetNextFrom(U); !ok {
 			return
 		}
 		// constant term: drop
-		// Thus: we must Z.Send() before another Z.Next()
-		// and may not use an Obtain-loop and have to cleanup ourselfs
+		// Thus: we must Z.Send() before another Z.Next(),
+		// we may not use an Obtain-loop and we have to do the cleanup ourselfs.
 
 		for i := 1; ; i++ {
 			if u, ok := U.Get(); ok {
@@ -180,25 +178,25 @@ func (U PS) Deriv() PS {
 		}
 		Z.Close()
 		U.Drop()
-	}(U, Z)
+	}(Z, U)
 	return Z
 }
 
 // Integrate, with const of integration.
 func (U PS) Integ(c Coefficient) PS {
-	Z := U.New()
-	go func(c Coefficient, U, Z PS) {
+	Z := U.new()
+	go func(Z PS, U PS, c Coefficient) {
 		Z.Put(c)
 
 		i := 1
 		for Z.SendCfnFrom(U, cRat1byI(i)) { // `u * 1/i`
 			i++
 		}
-	}(c, U, Z)
+	}(Z, U, c)
 	return Z
 }
 
-// Recip rocal of a power series
+// Recip rocal of a power series. The algorithm is:
 //	let U = `u + x*UU`
 //	let Z = `z + x*ZZ`
 //	`(u+x*UU)*(z+x*ZZ) = 1`
@@ -208,8 +206,8 @@ func (U PS) Integ(c Coefficient) PS {
 //	ZZ = `1/u * -UU * (z + x*ZZ)`
 //	ZZ = `1/u * (-z*UU + x*UU*ZZ)`
 func (U PS) Recip() PS {
-	Z := U.New()
-	go func(U, Z PS) {
+	Z := U.new()
+	go func(Z PS, U PS) {
 		u, ok := Z.GetNextFrom(U)
 		if !ok {
 			return
@@ -217,32 +215,32 @@ func (U PS) Recip() PS {
 		Z.Send(aC().Inv(u)) // `1/u`
 		mu := aC().Neg(u)   // `-z` minus z
 		ZZ := U.newPair()
-		ZZ.Split(Mul(U.CMul(mu), ZZ[0].Shift(u)))
+		ZZ.Split(U.CMul(mu).Times(ZZ[0].Shift(u)))
 		Z.Append(ZZ[1])
-	}(U, Z)
+	}(Z, U)
 	return Z
 }
 
-// Exp onential of a power series with constant term 0
-// (nonzero constant term would make nonrational coefficients)
+// Exp onential of a power series with constant term equal zero:
 //	Z = exp(U)
 //	DZ = Z*DU
 //	integrate to get Z
-// Note: The constant term is simply ignored.
+// Note: The constant term is simply ignored as
+// any nonzero constant term would imply nonrational coefficients.
 func (U PS) Exp() PS {
 	ZZ := U.newPair()
-	ZZ.Split(Mul(ZZ[0], U.Deriv()).Integ(aOne()))
+	ZZ.Split(ZZ[0].Times(U.Deriv()).Integ(aOne()))
 	return ZZ[1]
 }
 
-// Subst itute V for x in U, where the leading term of V is zero
+// Subst itute V for x in U, where the constant term of V is zero:
 //	let U = `u + x*UU`
 //	let V = `v + x*VV`
-//	then Subst(U,V) = `u + VV * Subst(V,UU)`
-// Note: Any nonzero constant term of `V` is ignored.
+//	then Subst(U,V) = `u + VV * Subst(U,VV)`
+// Note: Any nonzero constant term of `V` is simply ignored.
 func (U PS) Subst(V PS) PS {
-	Z := U.New()
-	go func(U, V, Z PS) {
+	Z := U.new()
+	go func(Z PS, U, V PS) {
 		if !Z.SendCfnFrom(U, cSame()) {
 			V.Drop()
 			return
@@ -250,18 +248,17 @@ func (U PS) Subst(V PS) PS {
 
 		VV := V.Split()
 		VV[0].Get() // Note: Any nonzero constant term of `V` is ignored.
-		Z.Append(Mul(VV[0], U.Subst(VV[1])))
+		Z.Append(VV[0].Times(U.Subst(VV[1])))
 
-	}(U, V, Z)
+	}(Z, U, V)
 	return Z
 }
 
-// MonSubst Monomial Substition: `U(c x^n)`
-//
+// MonSubst Monomial Substition: `U(c*x^n)`
 // Each Ui is multiplied by `c^i` and followed by n-1 zeros.
 func (U PS) MonSubst(c0 Coefficient, n int) PS {
-	Z := U.New()
-	go func(U, Z PS, c0 Coefficient, n int) {
+	Z := U.new()
+	go func(Z PS, U PS, c0 Coefficient, n int) {
 		c := aOne()
 		for Z.SendCfnFrom(U, cMul(c)) { // `c * u`
 			for i := 1; i < n; i++ {
@@ -273,7 +270,7 @@ func (U PS) MonSubst(c0 Coefficient, n int) PS {
 			}
 			c.Mul(c, c0) // `c = c * c0 = c^i`
 		}
-	}(U, Z, c0, n)
+	}(Z, U, c0, n)
 	return Z
 }
 

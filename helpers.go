@@ -13,8 +13,8 @@ package ps
 // Input variables:  From U,V,...
 // Output variables: Into ...,Y,Z
 
-// New returns a fresh power series.
-func (U PS) New() PS {
+// new returns a fresh power series.
+func (U PS) new() PS {
 	return New()
 }
 
