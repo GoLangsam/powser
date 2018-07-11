@@ -75,7 +75,7 @@ func init() {
 	Zero = NewRat(0, 1)
 	One = NewRat(1, 1)
 	Two = NewRat(2, 1)
-	// MinusOne.Neg(One)
+	// MinusOne.Neg(One) raises `nil` exception ?!?
 	MinusOne = NewRat(-1, 1)
 	Finis = NewRat(1, 0)
 }
@@ -88,12 +88,13 @@ func (u *Rat) End() int64 {
 	return 0
 }
 
+// Set sets `z` to `x` (by making a copy of `x`) and returns `z`.
 func (z *Rat) Set(x *Rat) *Rat {
 	if z == nil {
 		z = new(Rat)
 	}
 	if z != x {
-		(*z).num, (*z).den = (*x).num, (*x).den
+		z.num, z.den = x.num, x.den
 	}
 	return z
 }

@@ -51,18 +51,3 @@ func (from *Dch) Get() (dat *big.Rat) {
 	from.req <- struct{}{}
 	return <-from.dat
 }
-
-// Copy data from `from` into `into`
-func (into *Dch) Copy(from *Dch) {
-	for {
-		<-into.req
-		into.dat <- from.Get()
-	}
-}
-
-// Repeat keeps sending `dat` into `into`
-func (into *Dch) Repeat(dat *big.Rat) {
-	for {
-		into.Put(dat)
-	}
-}

@@ -7,12 +7,18 @@
 package ps
 
 import (
+	"fmt"
 	"os"
 
 	rat "github.com/GoLangsam/powser/big"
 )
 
-func Init() {
+var (
+	Ones PS
+	Twos PS
+)
+
+func init() {
 	Ones = Rep(rat.One)
 	Twos = Rep(rat.NewRat(2, 1))
 }
@@ -21,11 +27,11 @@ func check(U PS, c *rat.Rat, count int, str string) {
 	for i := 0; i < count; i++ {
 		r := U.Get()
 		if !r.Eq(c) {
-			print("got: ")
-			r.Pr()
-			print("should get ")
-			c.Pr()
-			print("\n")
+			fmt.Print("got: ")
+			fmt.Print(r.String())
+			fmt.Print("should get ")
+			fmt.Print(c.String())
+			fmt.Print("\n")
 			panic(str)
 		}
 	}
@@ -40,54 +46,54 @@ func checka(U PS, a []*rat.Rat, str string) {
 }
 
 func Example() {
-	Init()
+
 	if len(os.Args) > 1 { // print
-		print("Ones: ")
+		fmt.Print("Ones: ")
 		Ones.Printn(10)
-		print("Twos: ")
+		fmt.Print("Twos: ")
 		Twos.Printn(10)
-		print("Add: ")
+		fmt.Print("Add: ")
 		Add(Ones, Twos).Printn(10)
-		print("Diff: ")
-		Diff(Ones).Printn(10)
-		print("Integ: ")
-		Integ(rat.Zero, Ones).Printn(10)
-		print("CMul: ")
-		Cmul(rat.MinusOne, Ones).Printn(10)
-		print("Sub: ")
-		Sub(Ones, Twos).Printn(10)
-		print("Mul: ")
+		fmt.Print("Diff: ")
+		Ones.Diff().Printn(10)
+		fmt.Print("Integ: ")
+		Ones.Integ(rat.Zero).Printn(10)
+		fmt.Print("CMul: ")
+		Ones.Cmul(rat.MinusOne).Printn(10)
+		fmt.Print("Sub: ")
+		Ones.Minus(Twos).Printn(10)
+		fmt.Print("Mul: ")
 		Mul(Ones, Ones).Printn(10)
-		print("Exp: ")
-		Exp(Ones).Printn(15)
-		print("MonSubst: ")
-		MonSubst(Ones, rat.MinusOne, 2).Printn(10)
-		print("ATan: ")
-		Integ(rat.Zero, MonSubst(Ones, rat.MinusOne, 2)).Printn(10)
+		fmt.Print("Exp: ")
+		Ones.Exp().Printn(15)
+		fmt.Print("MonSubst: ")
+		Ones.MonSubst(rat.MinusOne, 2).Printn(10)
+		fmt.Print("ATan: ")
+		Ones.MonSubst(rat.MinusOne, 2).Integ(rat.Zero).Printn(10)
 	} else { // test
 		check(Ones, rat.One, 5, "Ones")
 		check(Add(Ones, Ones), rat.Two, 0, "Add Ones Ones")          // 1 1 1 1 1
 		check(Add(Ones, Twos), rat.NewRat(3, 1), 0, "Add Ones Twos") // 3 3 3 3 3
 		a := make([]*rat.Rat, N)
-		d := Diff(Ones)
+		d := Ones.Diff()
 		for i := 0; i < N; i++ {
 			a[i] = rat.NewRat(int64(i+1), 1)
 		}
 		checka(d, a, "Diff") // 1 2 3 4 5
-		in := Integ(rat.Zero, Ones)
+		in := Ones.Integ(rat.Zero)
 		a[0] = rat.Zero // integration constant
 		for i := 1; i < N; i++ {
 			a[i] = rat.NewRat(1, int64(i))
 		}
-		checka(in, a, "Integ")                                         // 0 1 1/2 1/3 1/4 1/5
-		check(Cmul(rat.MinusOne, Twos), rat.NewRat(-2, 1), 10, "CMul") // -1 -1 -1 -1 -1
-		check(Sub(Ones, Twos), rat.MinusOne, 0, "Sub Ones Twos")       // -1 -1 -1 -1 -1
+		checka(in, a, "Integ")                                        // 0 1 1/2 1/3 1/4 1/5
+		check(Twos.Cmul(rat.MinusOne), rat.NewRat(-2, 1), 10, "CMul") // -1 -1 -1 -1 -1
+		check(Ones.Minus(Twos), rat.MinusOne, 0, "Sub Ones Twos")     // -1 -1 -1 -1 -1
 		m := Mul(Ones, Ones)
 		for i := 0; i < N; i++ {
 			a[i] = rat.NewRat(int64(i+1), 1)
 		}
 		checka(m, a, "Mul") // 1 2 3 4 5
-		e := Exp(Ones)
+		e := Ones.Exp()
 		a[0] = rat.One
 		a[1] = rat.One
 		a[2] = rat.NewRat(3, 2)
@@ -99,7 +105,7 @@ func Example() {
 		a[8] = rat.NewRat(43817, 4480)
 		a[9] = rat.NewRat(4596553, 362880)
 		checka(e, a, "Exp") // 1 1 3/2 13/6 73/24
-		at := Integ(rat.Zero, MonSubst(Ones, rat.MinusOne, 2))
+		at := Ones.MonSubst(rat.MinusOne, 2).Integ(rat.Zero)
 		for c, i := 1, 0; i < N; i++ {
 			if i%2 == 0 {
 				a[i] = rat.Zero
@@ -110,7 +116,7 @@ func Example() {
 		}
 		checka(at, a, "ATan") // 0 -1 0 -1/3 0 -1/5
 		/*
-			t := Revert(Integ(rat.Zero, MonSubst(Ones, rat.MinusOne, 2)))
+			t := Revert(Ones.MonSubst(rat.MinusOne, 2).Integ(rat.Zero))
 			a[0] = rat.Zero
 			a[1] = rat.One
 			a[2] = rat.Zero
