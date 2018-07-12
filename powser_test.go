@@ -13,7 +13,11 @@ import (
 )
 
 func check(t *testing.T, U PS, c Coefficient, count int, str string) {
+	chk(t, U, c, count, str)
+	U.Drop()
+}
 
+func chk(t *testing.T, U PS, c Coefficient, count int, str string) {
 	for i := 0; i < count; i++ {
 
 		if r, ok := U.Get(); ok {
@@ -28,8 +32,9 @@ const N = 10
 
 func checka(t *testing.T, U PS, a []Coefficient, str string) {
 	for i := 0; i < len(a); i++ {
-		check(t, U, a[i], 1, str)
+		chk(t, U, a[i], 1, str)
 	}
+	U.Drop()
 }
 
 func TestPS(t *testing.T) {
