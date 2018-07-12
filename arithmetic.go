@@ -236,7 +236,7 @@ func (U PS) Exp() PS {
 // Subst itute V for x in U, where the constant term of V is zero:
 //	let U = `u + x*UU`
 //	let V = `v + x*VV`
-//	then Subst(U,V) = `u + VV * Subst(U,VV)`
+//	then U.Subst(V) = `u + VV * U.Subst(VV)`
 // Note: Any nonzero constant term of `V` is simply ignored.
 func (U PS) Subst(V PS) PS {
 	Z := U.new()

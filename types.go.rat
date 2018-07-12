@@ -17,12 +17,14 @@ import (
 // Coefficient of a power series - a rational number in this case.
 //
 //  Note: Coefficients just need to provide:
+//  `Equal(a, b)` to discriminate iff `a` is equal to `b`.
+//  `IsZero(a)` to discriminate iff coefficient `a` is equal to zero.
 //  `Add(a, b)` as commutative and associative addition with `aZero` as neutral element,
 //  `Sub(a, b)` as substraction, and `Neg(a)` as convenience for `-a` (so `Add(a, Neg(a)) == aZero`),
 //  `Mul(a, b)` as commutative and associative multiplication with `aOne` as neutral element,
 //  `Inv(a)` as the inverse of multiplication `1/a` (for `a` not == aZero).
-//  `Equal(a, b)` to discriminate iff `a` is equal to `b`.
-//  `IsZero(a)` to discriminate iff coefficient `a` is equal to zero.
+//
+//  Note: `Inv(a)` is for `U.Recip()` only; remove for coefficients with no inverse.
 type Coefficient = *big.Rat
 
 // NewCoefficient returns a new coefficient: the rational `a/b`.
