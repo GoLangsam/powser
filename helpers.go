@@ -20,8 +20,8 @@ func (U PS) new() PS {
 
 // ---------------------------------------------------------------------------
 // Closure functions on some coefficient math - for convenient use with SendCfnFrom
-// Note: Its used where it helps to tighten the implementation of an algorithm,
-// and intentionally calculations are done directly and explicit in other places.
+// Note: Such closures are used where it helps to tighten the implementation of an algorithm,
+// and in other places calculations are intentionally done directly and explicit.
 
 // cSame `u`
 func cSame() func(u Coefficient) Coefficient {

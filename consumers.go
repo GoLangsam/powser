@@ -69,7 +69,7 @@ func (U PS) Printn(n int) {
 
 // Printer returns a copy of `U`,
 // and concurrently prints up to n terms of it.
-// Useful to inspect formulas.
+// Useful to inspect formulas as it can be chained.
 func (U PS) Printer(n int) PS {
 	UU := U.Split()
 

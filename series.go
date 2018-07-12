@@ -137,7 +137,7 @@ func OneByFibonacci() PS {
 	return Z
 }
 
-// Sincos returns the power series for sinus and cosinus (in radians).
+// Sincos returns the power series for sine and cosine (in radians).
 func Sincos() (Sin PS, Cos PS) {
 	Sin = New()
 	Cos = New()
@@ -172,14 +172,14 @@ func Sincos() (Sin PS, Cos PS) {
 	return
 }
 
-// Sin returns the power series for sinus (in radians).
+// Sin returns the power series for sine (in radians).
 func Sin() PS {
 	U, V := Sincos()
 	V.Drop()
 	return U
 }
 
-// Cos returns the power series for cosinus (in radians).
+// Cos returns the power series for cosine (in radians).
 func Cos() PS {
 	U, V := Sincos()
 	U.Drop()

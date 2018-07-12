@@ -221,7 +221,7 @@ func (U PS) Recip() PS {
 	return Z
 }
 
-// Exp onential of a power series with constant term equal zero:
+// Exp onentiation of a power series (with constant term equal zero):
 //	Z = exp(U)
 //	DZ = Z*DU
 //	integrate to get Z
