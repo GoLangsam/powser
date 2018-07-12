@@ -1,5 +1,5 @@
 # powser
-Power series (with rational coefficients) by lazy evaluated demand channels. No goroutines leak!
+Power series (with rational coefficients) by [lazy evaluated](https://en.wikipedia.org/wiki/Lazy_evaluation) demand channels. No goroutines leak!
 
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE.md)
 [![Go Report Card](https://goreportcard.com/badge/github.com/GoLangsam/pipe)](https://goreportcard.com/report/github.com/GoLangsam/powser)
@@ -7,10 +7,21 @@ Power series (with rational coefficients) by lazy evaluated demand channels. No 
 [![GoDoc](https://godoc.org/github.com/GoLangsam/powser?status.svg)](https://godoc.org/github.com/GoLangsam/powser)
 
 ## Overview
-[Power series](https://en.wikipedia.org/wiki/Formal_power_series) with rational coefficients,
+[Power series](https://en.wikipedia.org/wiki/Formal_power_series) - with rational coefficients,
+
+As _M. Douglas McIlroy_ says in his [Squinting at Power Series](https://swtch.com/~rsc/thread/squint.pdf):
+
+> Data streams are an ideal vehicle for handling power series. Stream
+> implementations can be read off directly from simple recursive equations
+> that define operations such as multiplication, substitution, exponentiation,
+> and reversion of series. The bookkeeping that bedevils these algorithms
+> when they are expressed in traditional languages is completely hidden
+> when they are expressed in stream terms. Communicating processes are
+> the key to the simplicity of the algorithms.
 
 `powser` builds on advanced concurrent functionality:
-lazy evaluated demand channels represent the potentially infinite stream of coefficients.
+[lazy evaluated](https://en.wikipedia.org/wiki/Lazy_evaluation) demand channels
+represent the potentially infinite stream of coefficients.
 
 Coefficients can be `*big.Rat` from "math/big" or simple int64 rationals (included).
 
@@ -58,8 +69,8 @@ provides methods to combine power series:
 
 - basic helpers
   - `CMul` multiplies `U` by a constant `c` and returns `c*U`.
-  - `MonMul` multiplies `U` by the monomial "x^n" and returns `x^n * U`.
-  - `XMul` multiplies `U` by `x` (by the monomial "x^1") and returns `x * U`.
+  - `MonMul` multiplies `U` by the monomial `x^n` and returns `x^n * U`.
+  - `XMul` multiplies `U` by `x` (by the monomial `x^1`) and returns `x * U`.
   - `Shift` returns `c + x*U`
 
 - Variadic algebraic operations:
@@ -67,7 +78,7 @@ provides methods to combine power series:
 
 - Substitution:
   - `MonSubst`: Monomial Substitution: `U(c*x^n)` Each Ui is multiplied by `c^i` and followed by n-1 zeros.
-  - `Subst`: Substitute V for x in U: `U(V(x))` (also called composition).
+  - `Subst`: Substitute V for x in U: `U(V(x))` (also called "composition").
 
 - The operators from differential calculus / analysis:
   - `Deriv`: Differentiates `U` and returns the derivative.
@@ -126,3 +137,5 @@ and in other places calculations are intentionally done directly and explicit.
 
 ### [Coefficients](coefficients.go)
 provides special (and non-exported) rational coefficients such a `aZero` or `aOne`.
+
+---
