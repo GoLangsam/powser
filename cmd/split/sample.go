@@ -63,9 +63,9 @@ func sample(n int) {
 
 		fmt.Println()
 		OO[0].Printn(10)
-		fmt.Println()
+		fmt.Println(" OO[0] done")
 		OO[1].Printn(10)
-		fmt.Println()
+		fmt.Println(" OO[1] done")
 
 	case 4:
 		fmt.Println("#", n, " Ones: ")
@@ -73,7 +73,7 @@ func sample(n int) {
 		c, _ = OO[0].Get()
 		fmt.Print("  OO[0] = ", c)
 		OO[0].Drop()
-		fmt.Println()
+		fmt.Println(" OO[0] done")
 		c, _ = OO[1].Get()
 		fmt.Print("  OO[1] = ", c)
 		c, _ = OO[1].Get()
@@ -83,7 +83,7 @@ func sample(n int) {
 
 		fmt.Println()
 		OO[1].Printn(10)
-		fmt.Println()
+		fmt.Println(" OO[1] done")
 
 	default:
 		fmt.Println("No such sample #", n, " - max =", max)
