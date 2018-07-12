@@ -7,9 +7,9 @@ package ps
 import (
 	"math/big"
 
-	// "github.com/GoLangsam/powser/big"
-	// "github.com/GoLangsam/powser/dch.rat"
-	"github.com/GoLangsam/powser/dch.big"
+	"github.com/GoLangsam/powser/big.dch"
+	// "github.com/GoLangsam/powser/rat"
+	// "github.com/GoLangsam/powser/rat.dch"
 )
 
 // ===========================================================================
