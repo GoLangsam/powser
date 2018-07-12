@@ -20,7 +20,7 @@ import (
 //  `Equal(a, b)` to discriminate iff `a` is equal to `b`.
 //  `IsZero(a)` to discriminate iff coefficient `a` is equal to zero.
 //  `Add(a, b)` as commutative and associative addition with `aZero` as neutral element,
-//  `Sub(a, b)` as substraction, and `Neg(a)` as convenience for `-a` (so `Add(a, Neg(a)) == aZero`),
+//  `Sub(a, b)` as subtraction, and `Neg(a)` as convenience for `-a` (so `Add(a, Neg(a)) == aZero`),
 //  `Mul(a, b)` as commutative and associative multiplication with `aOne` as neutral element,
 //  `Inv(a)` as the inverse of multiplication `1/a` (for `a` not == aZero).
 //

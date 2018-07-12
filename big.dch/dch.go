@@ -63,7 +63,7 @@ func (from *Dch) Get() (val *big.Rat, open bool) {
 func (from *Dch) Drop() {
 	close(from.req)
 	go func(from *Dch) {
-		for _ = range from.ch {
+		for range from.ch {
 		} // drain values - there could be some
 	}(from)
 }
@@ -98,7 +98,7 @@ func (into *Dch) GetNextFrom(from *Dch) (val *big.Rat, ok bool) {
 //
 // Next blocks until a requested is received.
 //
-// A sucessful Next is to be followed by one Send(v).
+// A successful Next is to be followed by one Send(v).
 func (into *Dch) Next() bool {
 	_, ok := <-into.req
 	return ok
@@ -156,7 +156,7 @@ func (into *Dch) Into() (req <-chan struct{}, snd chan<- *big.Rat) {
 func (into *Dch) Close() {
 	close(into.ch)
 	go func(into *Dch) {
-		for _ = range into.req {
+		for range into.req {
 		} // drain requests - there could be some
 	}(into)
 }

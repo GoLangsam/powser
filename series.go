@@ -71,7 +71,7 @@ func Twos() PS {
 	return AdInfinitum(NewCoefficient(2, 1))
 }
 
-// AdInfinitum repeates coefficient `c` ad infinitum
+// AdInfinitum repeats coefficient `c` ad infinitum
 // and returns `c^i`.
 func AdInfinitum(c Coefficient) PS {
 	Z := New()
