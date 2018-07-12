@@ -6,7 +6,7 @@ package dch
 
 import (
 	"math/big"
-	// "github.com/GoLangsam/powser/big"
+	// "github.com/GoLangsam/powser/rat"
 )
 
 // ===========================================================================
