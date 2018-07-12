@@ -9,15 +9,15 @@ package ps
 // use dch.MyDchInto() and dch.MyDchFrom() to obtain the anonymously embedded value
 // and invoke its underlying method.
 
-// Append all coefficients from `From` into `Into`.
-func (Into PS) Append(From PS) {
-	Into.MyDch().Append(From.MyDch())
+// Append all coefficients from `U` into `Into`.
+func (Into PS) Append(U PS) {
+	Into.MyDch().Append(U.MyDch())
 }
 
-// GetNextFrom `From` for `Into` and report success.
+// GetNextFrom `U` for `Into` and report success.
 // Follow with `Into.Send( f(c) )`, iff ok.
-func (Into PS) GetNextFrom(From PS) (c Coefficient, ok bool) {
-	return Into.MyDch().GetNextFrom(From.MyDch())
+func (Into PS) GetNextFrom(U PS) (c Coefficient, ok bool) {
+	return Into.MyDch().GetNextFrom(U.MyDch())
 }
 
 // GetWith returns each first value received from the two given power series
@@ -46,14 +46,14 @@ func (U PS) Split() [2]PS {
 // pairPS represents a pair of power series.
 type pairPS [2]PS
 
-// pair returns an empty pair of new power series.
+// newPair returns an empty pair of new power series.
 func (U PS) newPair() pairPS {
 	return pairPS{New(), New()}
 }
 
-// Split `From` into a given pair of power series.
-func (UU pairPS) Split(From PS) {
-	From.MyDch().SplitUs(UU[0].MyDch(), UU[1].MyDch())
+// Split `U` into a given pair of power series.
+func (UU pairPS) Split(U PS) {
+	U.MyDch().SplitUs(UU[0].MyDch(), UU[1].MyDch())
 }
 
 // ===========================================================================
