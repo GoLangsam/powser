@@ -12,29 +12,6 @@ import (
 	. "github.com/GoLangsam/powser"
 )
 
-// Ones are 1 1 1 1 1 ... = `1/(1-x)` with a simple pole at `x=1`.
-func Ones() PS {
-	return AdInfinitum(NewCoefficient(1, 1))
-}
-
-// Twos are 2 2 2 2 2 ... just for samples.
-func Twos() PS {
-	return AdInfinitum(NewCoefficient(2, 1))
-}
-
-// AdInfinitum repeates coefficient `c` ad infinitum
-// and returns `c^i`.
-func AdInfinitum(c Coefficient) PS {
-	Z := New()
-	go func(Z PS, c Coefficient) {
-		defer Z.Close()
-		for Z.Next() {
-			Z.Send(c)
-		}
-	}(Z, c)
-	return Z
-}
-
 func check(t *testing.T, U PS, c Coefficient, count int, str string) {
 
 	for i := 0; i < count; i++ {
