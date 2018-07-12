@@ -120,6 +120,22 @@ func (into *Dch) Put(val *big.Rat) bool {
 	_, ok := <-into.req
 	if ok {
 		into.ch <- val
+	} else {
+		into.Close()
+	}
+	return ok
+}
+
+// Provide is the low-level send-upon-request method
+// - aka "myAnyChan <- myAny".
+//
+// Note: Provide is low-level and differs from Put
+// as the latter closes the channel upon nok.
+// Use with care.
+func (into *Dch) Provide(val *big.Rat) bool {
+	_, ok := <-into.req
+	if ok {
+		into.ch <- val
 	}
 	return ok
 }

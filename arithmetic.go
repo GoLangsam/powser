@@ -84,8 +84,17 @@ func (U PS) CMul(c Coefficient) PS {
 func (U PS) MonMul(n int) PS {
 	Z := U.new()
 	go func(Z PS, U PS, n int) {
+		if !(n > 0) {
+			Z.Close()
+			U.Drop()
+			return
+		}
+
 		for ; n > 0; n-- {
-			Z.Put(aZero())
+			if !Z.Put(aZero()) {
+				U.Drop()
+				return
+			}
 		}
 		Z.Append(U)
 	}(Z, U, n)
@@ -103,7 +112,10 @@ func (U PS) XMul() PS {
 func (U PS) Shift(c Coefficient) PS {
 	Z := U.new()
 	go func(Z PS, U PS, c Coefficient) {
-		Z.Put(c)
+		if !Z.Put(c) {
+			U.Drop()
+			return
+		}
 		Z.Append(U)
 	}(Z, U, c)
 	return Z
@@ -186,7 +198,10 @@ func (U PS) Deriv() PS {
 func (U PS) Integ(c Coefficient) PS {
 	Z := U.new()
 	go func(Z PS, U PS, c Coefficient) {
-		Z.Put(c)
+		if !Z.Put(c) {
+			U.Drop()
+			return
+		}
 
 		i := 1
 		for Z.SendCfnFrom(U, cRat1byI(i)) { // `u * 1/i`
@@ -263,7 +278,6 @@ func (U PS) MonSubst(c0 Coefficient, n int) PS {
 		for Z.SendCfnFrom(U, cMul(c)) { // `c * u`
 			for i := 1; i < n; i++ {
 				if !Z.Put(aZero()) { // n-1 zeros
-					Z.Close()
 					U.Drop()
 					return
 				}

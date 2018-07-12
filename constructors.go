@@ -28,11 +28,11 @@ func Monomial(c Coefficient, n int) PS {
 		}
 
 		for ; n > 0; n-- { // n-1 times aZero
-			if !Z.Put(aZero()) {
+			if !Z.Provide(aZero()) {
 				return
 			}
 		}
-		Z.Put(c) // `c * x^n`
+		Z.Provide(c) // `c * x^n`
 
 	}(Z, c, n)
 	return Z
@@ -48,7 +48,7 @@ func Binomial(c Coefficient) PS {
 
 		i, iZ := 1, aOne() // `1`, `1/1`
 		for !IsZero(c) {
-			if !Z.Put(iZ) {
+			if !Z.Provide(iZ) {
 				return
 			}
 			iZ.Mul(iZ, aC().Mul(c, rat1byI(i))) // `iZ = iZ * c * 1/i`
@@ -74,7 +74,7 @@ func Polynom(a ...Coefficient) PS {
 		}
 
 		for i := 0; i < j; i++ {
-			if !Z.Put(a[i]) {
+			if !Z.Provide(a[i]) {
 				return
 			}
 		}

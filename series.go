@@ -76,7 +76,6 @@ func Twos() PS {
 func AdInfinitum(c Coefficient) PS {
 	Z := New()
 	go func(Z PS, c Coefficient) {
-		defer Z.Close()
 		for Z.Put(c) {
 		}
 	}(Z, c)
@@ -89,7 +88,6 @@ func AdInfinitum(c Coefficient) PS {
 func Factorials() PS {
 	Z := New()
 	go func(Z PS) {
-		defer Z.Close()
 		curr := aOne()
 		for i := 1; Z.Put(curr); i++ {
 			curr = curr.Mul(curr, ratIby1(i))
@@ -102,7 +100,6 @@ func Factorials() PS {
 func OneByFactorial() PS {
 	Z := New()
 	go func(Z PS) {
-		defer Z.Close()
 		curr := aOne()
 		for i := 1; Z.Put(aC().Inv(curr)); i++ {
 			curr = curr.Mul(curr, ratIby1(i))
@@ -115,7 +112,6 @@ func OneByFactorial() PS {
 func Fibonaccis() PS {
 	Z := New()
 	go func(Z PS) {
-		defer Z.Close()
 		prev, curr := aZero(), aOne()
 		for Z.Put(curr) {
 			prev, curr = curr, aC().Add(curr, prev)
@@ -128,7 +124,6 @@ func Fibonaccis() PS {
 func OneByFibonacci() PS {
 	Z := New()
 	go func(Z PS) {
-		defer Z.Close()
 		prev, curr := aZero(), aOne()
 		for Z.Put(aC().Inv(curr)) {
 			prev, curr = curr, aC().Add(curr, prev)

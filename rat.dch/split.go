@@ -80,7 +80,7 @@ func (from *Dch) split(out1, out2 *Dch, wait <-chan struct{}) {
 	}
 
 	if ok {
-		out2.Put(dat)
+		out2.Provide(dat)
 	}
 	if !(ok && req) { // no dispatch - we're last man standing
 		out2.Append(from)
