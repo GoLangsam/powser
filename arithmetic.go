@@ -194,7 +194,7 @@ func (U PS) Deriv() PS {
 	return Z
 }
 
-// Integrate, with const of integration.
+// Integ integrates `U` with `c` as constant of integration.
 func (U PS) Integ(c Coefficient) PS {
 	Z := U.new()
 	go func(Z PS, U PS, c Coefficient) {

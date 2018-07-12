@@ -9,14 +9,14 @@ package main
 import (
 	"fmt"
 
-	. "github.com/GoLangsam/powser"
+	"github.com/GoLangsam/powser"
 )
 
 // ===========================================================================
 
 func sample(n int) {
 
-	var c Coefficient
+	var c ps.Coefficient
 
 	switch n {
 

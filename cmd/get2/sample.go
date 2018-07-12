@@ -9,12 +9,12 @@ package main
 import (
 	"fmt"
 
-	. "github.com/GoLangsam/powser"
+	"github.com/GoLangsam/powser"
 )
 
 // ===========================================================================
 
-func test2(U, V PS, n int) {
+func test2(U, V ps.PS, n int) {
 
 	for i := 0; i < n; i++ {
 		u, okU, v, okV := U.GetWith(V)

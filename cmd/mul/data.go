@@ -5,45 +5,46 @@
 package main
 
 import (
-	. "github.com/GoLangsam/powser"
+	"github.com/GoLangsam/powser"
 )
 
 // ===========================================================================
 
+// N may be used as "how-many-terms-to-print"
 const N = 10
 
-func aCoeff() Coefficient {
-	return NewCoefficient(cn, cd)
+func aCoeff() ps.Coefficient {
+	return ps.NewCoefficient(cn, cd)
 }
 
-func poly() PS {
-	return Polynom(
-		NewCoefficient(1, 1),
-		NewCoefficient(1, 2),
-		NewCoefficient(1, 3),
-		NewCoefficient(1, 4),
-		NewCoefficient(1, 5),
+func poly() ps.PS {
+	return ps.Polynom(
+		ps.NewCoefficient(1, 1),
+		ps.NewCoefficient(1, 2),
+		ps.NewCoefficient(1, 3),
+		ps.NewCoefficient(1, 4),
+		ps.NewCoefficient(1, 5),
 	)
 }
 
-func one() PS {
-	return Polynom(
-		NewCoefficient(1, 1),
+func one() ps.PS {
+	return ps.Polynom(
+		ps.NewCoefficient(1, 1),
 	)
 }
 
-func lin() PS {
-	return Polynom(
-		NewCoefficient(1, 1),
-		NewCoefficient(1, 1),
+func lin() ps.PS {
+	return ps.Polynom(
+		ps.NewCoefficient(1, 1),
+		ps.NewCoefficient(1, 1),
 	)
 }
 
-func sqr() PS {
-	return Polynom(
-		NewCoefficient(1, 1),
-		NewCoefficient(1, 1),
-		NewCoefficient(1, 1),
+func sqr() ps.PS {
+	return ps.Polynom(
+		ps.NewCoefficient(1, 1),
+		ps.NewCoefficient(1, 1),
+		ps.NewCoefficient(1, 1),
 	)
 }
 
