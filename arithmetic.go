@@ -257,7 +257,6 @@ func (U PS) Subst(V PS) PS {
 	Z := U.new()
 	go func(Z PS, U, V PS) {
 		if !Z.SendCfnFrom(U, cSame()) {
-			V.Drop()
 			return
 		}
 

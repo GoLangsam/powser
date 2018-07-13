@@ -5,7 +5,7 @@
 package ps_test
 
 import (
-	ps "github.com/GoLangsam/powser"
+	"github.com/GoLangsam/powser"
 )
 
 // ===========================================================================
