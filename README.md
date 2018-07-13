@@ -1,5 +1,5 @@
 # powser
-Power series (with rational coefficients) by [lazy evaluated](https://en.wikipedia.org/wiki/Lazy_evaluation) demand channels. No goroutines leak!
+[Power series](https://en.wikipedia.org/wiki/Power_series) (with [rational](https://en.wikipedia.org/wiki/Rational_number) coefficients) by [lazy evaluated](https://en.wikipedia.org/wiki/Lazy_evaluation) demand channels. No goroutines leak!
 
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE.md)
 [![Go Report Card](https://goreportcard.com/badge/github.com/GoLangsam/pipe)](https://goreportcard.com/report/github.com/GoLangsam/powser)
@@ -7,8 +7,7 @@ Power series (with rational coefficients) by [lazy evaluated](https://en.wikiped
 [![GoDoc](https://godoc.org/github.com/GoLangsam/powser?status.svg)](https://godoc.org/github.com/GoLangsam/powser)
 
 ## Overview
-[Power series](https://en.wikipedia.org/wiki/Formal_power_series) - with rational coefficients,
-
+[Power series](https://en.wikipedia.org/wiki/Formal_power_series) - with [rational](https://en.wikipedia.org/wiki/Rational_number) coefficients.
 As _M. Douglas McIlroy_ says in his [Squinting at Power Series](https://swtch.com/~rsc/thread/squint.pdf):
 
 > Data streams are an ideal vehicle for handling power series. Stream
@@ -21,9 +20,8 @@ As _M. Douglas McIlroy_ says in his [Squinting at Power Series](https://swtch.co
 
 `powser` builds on advanced concurrent functionality:
 [lazy evaluated](https://en.wikipedia.org/wiki/Lazy_evaluation) demand channels
-represent the potentially infinite stream of coefficients.
-
-Coefficients can be `*big.Rat` from "math/big" or simple int64 rationals (included).
+represent the potentially infinite stream of coefficients,
+which can be `*big.Rat` from "math/big" or simple int64 rationals (included).
 
 Powser has simple [conventions](#conventions) and provides:
 
@@ -44,22 +42,39 @@ Powser has simple [conventions](#conventions) and provides:
 ## Remarks
 
 Note: Use of coefficients from any other ring (such as square matrices) is easy to accomplish.
-It just takes minimal dedicated changes - given the arithmetic methods are homo morph.
+It just takes minimal dedicated changes - given the arithmetic methods have suitable signature.
 
 Note: `powser` is inspired by a test from the standard Go distribution (`test/chan/powser1.go`).
 
 This implementation makes a clear separation between the power series themselves,
-and the coefficients and their demand channel, which live in separate packages.
+and the coefficients and their demand channels, which live in separate packages.
 
-And all the spawned goroutines do not leak! They all terminate, both
+And all the spawned goroutines do not leak! They all terminate. Both
 - upon input being closed by the producer (lacking more data: a finite power series aka polynom) - and 
 - upon output being dropped by the consumer (as there is no need for further coefficients).
 
 Great care was taken to get this right (which is not trivial).
 
+And: The expression of the mathematical algorithms (e.g. in [arithmetic](#arithmetic))
+is more tight in this implementation thanks to the helpers and the channel handling package
+(even so some more lines need to cater for resource cleanup: Drop/Close).
+
 The overall result is too good, powerful and complete
 as to serve as an example only in the related project [`pipe/s`](https://github.com/GoLangsam/pipe)
 and thus is given here as an independent and stand-alone repository in the hope to be useful for someone.
+
+Note: A considerable weakness of the approach taken and discussed in [Squinting at Power Series](https://swtch.com/~rsc/thread/squint.pdf)
+is the `Split` method used e.g. for multiplication: it spawns another goroutine per value just in order to queue values not dispatchable yet.
+
+A simple internal use of a circular ring buffer as queue effectively avoids such waste of precious resources.
+An implementation can (soon) be found [here](https://github.com/GoLangsam/ps).
+
+And a clear and type-safe distinction between send-only and receive-only channels
+provides much more safety for clients of the channel package.
+
+Last, but not least, power series are just _one_ usecase for concurrency and demand channels.
+Others, such as [continued fractions](https://en.wikipedia.org/wiki/Continued_fraction) await to be explored and conquered.
+Using generic tools from [`pipe/s`](https://github.com/GoLangsam/pipe) should ease such undertaking.
 
 ---
 ## Details
