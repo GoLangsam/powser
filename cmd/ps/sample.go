@@ -25,162 +25,210 @@ func sample(n int) {
 	case 2:
 		fmt.Print("#", n, " Twos: ")
 		ps.Twos().Printn(20)
+
 	case 3:
+		fmt.Print("#", n, " Factorials      : ")
+		ps.Factorials().Printn(10)
+	case 4:
+		fmt.Print("#", n, " Fibonaccis      : ")
+		ps.Fibonaccis().Printn(14)
+
+	case 5:
+		fmt.Print("#", n, " 1 / Fact = e^x  : ")
+		ps.OneByFactorial().Printn(10)
+	case 6:
+		fmt.Print("#", n, " 1 / Fibonacci   : ")
+		ps.OneByFibonacci().Printn(14)
+
+	case 7:
+		fmt.Print("#", n, " Sinus           : ")
+		ps.Sin().Printn(14)
+	case 8:
+		fmt.Print("#", n, " Cos (-1)^i/(2i)!: ")
+		ps.Cos().Printn(14)
+
+	case 9:
+		fmt.Print("#", n, " Sin^2 + Cos^2==1: ")
+		S1, C1 := ps.Sincos()
+		S2, C2 := ps.Sincos()
+		S1.Times(S2).Plus(C1.Times(C2)).Printn(20)
+
+	// Plus Less
+
+	case 10:
+		fmt.Print("#", n, " Ones: ")
+		ps.Ones().Printn(20)
+	case 11:
+		fmt.Print("#", n, " Twos: ")
+		ps.Twos().Printn(20)
+	case 12:
+		fmt.Print("#", n, " Twos: ")
+		ps.Twos().Printn(2)
+	case 13:
 		fmt.Print("#", n, " Add : ")
 		ps.Ones().Plus(ps.Twos()).Printn(20)
-	case 4:
+	case 14:
 		fmt.Print("#", n, " 1+  : ")
 		ps.Ones().Plus().Printn(20)
-	case 5:
+	case 15:
 		fmt.Print("#", n, " 1+2 : ")
 		ps.Ones().Plus(ps.Twos()).Printn(20)
-	case 6:
+	case 16:
 		fmt.Print("#", n, " 1+8 : ")
 		ps.Ones().Plus(ps.Twos(), ps.Ones(), ps.Twos(), ps.Ones(), ps.Twos()).Printn(20)
-	case 7:
+	case 17:
 		fmt.Print("#", n, " 1-  : ")
 		ps.Ones().Less().Printn(20)
-	case 8:
+	case 18:
 		fmt.Print("#", n, " 1-2 : ")
 		ps.Ones().Less(ps.Twos()).Printn(18)
-	case 9:
+	case 19:
 		fmt.Print("#", n, " 1-9 : ")
 		ps.Ones().Less(ps.Ones(), ps.Twos(), ps.Ones(), ps.Twos(), ps.Ones(), ps.Twos()).Printn(18)
 
 	// Plus Less - with short PS
 
-	case 10:
+	case 20:
 		fmt.Print("#", n, " Quad: ")
 		sqr().Printn(20)
-	case 11:
+	case 21:
 		fmt.Print("#", n, " Poly: ")
 		poly().Printn(20)
-	case 12:
+	case 22:
 		fmt.Print("#", n, " Poly: ")
 		poly().Printn(2)
-	case 13:
+	case 23:
 		fmt.Print("#", n, " Add : ")
-		ps.Ones().Plus(poly()).Printn(17)
-	case 14:
+		poly().Plus(ps.Ones()).Printn(17)
+	case 24:
 		fmt.Print("#", n, " 1+  : ")
 		poly().Plus().Printn(20)
-	case 15:
+	case 25:
 		fmt.Print("#", n, " 1+2 : ")
 		poly().Plus(sqr()).Printn(17)
-	case 16:
+	case 26:
 		fmt.Print("#", n, " 1+9 : ")
 		poly().Plus(one(), lin(), sqr(), one(), lin(), sqr()).Printn(15)
-	case 17:
+	case 27:
 		fmt.Print("#", n, " 1-  : ")
 		sqr().Less().Printn(20)
-	case 18:
+	case 28:
 		fmt.Print("#", n, " 1-2 : ")
 		sqr().Less(lin()).Printn(18)
-	case 19:
+	case 29:
 		fmt.Print("#", n, " 1-9 : ")
 		poly().Less(one(), lin(), sqr(), one(), lin(), sqr()).Printn(18)
 
-		// Add: (Into)-Methods? GetNextFrom, SendOneFrom, Append, GetWith ???
+	// Multiply & Co
 
-		// Multiply & Co
-	case 20:
+	case 30:
 		fmt.Print("#", n, " CMul: ")
 		ps.Ones().CMul(aMinusOne()).Printn(18)
-	case 21:
+	case 31:
 		fmt.Print("#", n, " XMul: ") // XMul = MonMul(1)
 		ps.Ones().XMul().Printn(20)
-	case 22:
+	case 32:
 		fmt.Print("#", n, " Mul : ")
 		ps.Ones().Times(ps.Ones()).Printn(20)
-	case 23:
+	case 33:
 		fmt.Print("#", n, " 1*  : ")
 		ps.Ones().Times().Printn(20)
-	case 24:
+	case 34:
 		fmt.Print("#", n, " 1*2 : ")
 		ps.Ones().Times(ps.Twos()).Printn(16)
-	case 25:
+	case 35:
 		fmt.Print("#", n, " 1*9 : ")
 		ps.Ones().Times(ps.Ones(), ps.Twos(), ps.Ones(), ps.Twos(), ps.Ones(), ps.Twos()).Printn(14)
-	case 26:
+	case 36:
 		fmt.Print("#", n, " Subst 2in1: ")
 		ps.Ones().Subst(ps.Twos()).Printn(6)
-	case 27:
+	case 37:
 		fmt.Print("#", n, " MonSubst  : ")
 		ps.Ones().MonSubst(aMinusOne(), 3).Printn(14)
-	case 28:
+	case 38:
 		fmt.Print("#", n, " Subst c...: ")
 		ps.Ones().Subst(ps.AdInfinitum(aCoeff())).Printn(16)
-	case 29:
+	case 39:
 		fmt.Print("#", n, " c*(-1)^4  : ")
 		ps.AdInfinitum(aCoeff()).MonSubst(aMinusOne(), 4).Printn(20)
 
 		// Constructors:
-	case 30:
+	case 40:
 		fmt.Print("#", n, " AdInfinitum(c)  : ")
 		ps.AdInfinitum(aCoeff()).Printn(20)
-	case 31:
+	case 41:
 		fmt.Print("#", n, " Monomial(c, 4)  : ")
 		ps.Monomial(aCoeff(), 4).Printn(20)
-	case 32:
+	case 42:
 		fmt.Print("#", n, " Binomial(c)     : ")
 		ps.Binomial(aCoeff()).Printn(16)
-	case 33:
+	case 43:
 		fmt.Print("#", n, " Polynom(1,2,3,c): ")
 		ps.Polynom(aOne(), ps.NewCoefficient(2, 1), ps.NewCoefficient(3, 1), aCoeff()).Printn(16)
 
+	case 44:
+		fmt.Print("#", n, " Factorials      : ")
+		ps.Factorials().Printn(10)
+	case 45:
+		fmt.Print("#", n, " Fibonaccis      : ")
+		ps.Fibonaccis().Printn(14)
+
+
 		// Cofficients:
-	case 36:
+	case 46:
 		fmt.Print("#", n, " Shift twos by c : ")
 		ps.Twos().Shift(aCoeff()).Printn(11)
 
-	case 37:
+	case 47:
 		fmt.Print("#", n, " MonMul(cn) * x^n: ")
 		poly().MonMul(int(cn)).Printn(20)
 
 		// Recip():
-	case 38:
+	case 48:
 		fmt.Print("#", n, " 1 / (1+x)       : ")
 		lin().Recip().Printn(14)
 
-	case 39:
+	case 49:
 		fmt.Print("#", n, " 1 / Poly        : ")
 		poly().Recip().Printn(9)
 
-	case 40:
+	case 50:
 		fmt.Print("#", n, " 1 / Poly #2     : ")
 		poly().Recip().Printn(2)
 
 		// Analysis:
-	case 41:
+	case 51:
 		fmt.Print("#", n, " Deriv: ")
 		ps.Ones().Deriv().Printn(11)
-	case 42:
+	case 52:
 		fmt.Print("#", n, " Integ: ")
 		ps.Ones().Integ(aZero()).Printn(12)
 
-	case 43:
+	case 53:
 		fmt.Print("#", n, " Deriv: ")
 		sqr().Deriv().Printn(11)
-	case 44:
+	case 54:
 		fmt.Print("#", n, " Integ: ")
 		lin().Integ(aZero()).Printn(12)
 
 		// Functions:
-	case 45:
+	case 55:
 		fmt.Print("#", n, " Exp  : ")
 		ps.Ones().Exp().Printn(9)
 
-	case 46:
+	case 56:
 		fmt.Print("#", n, " ATan : ")
 		ps.Ones().MonSubst(aMinusOne(), 2).Integ(aZero()).Printn(14)
 
-	case 47:
+	case 57:
 		fmt.Print("#", n, " Exp  : ")
 		lin().Exp().Printn(9)
 
-	case 48:
+	case 58:
 		fmt.Print("#", n, " ATan : ")
 		ps.Ones().MonSubst(aMinusOne(), 2).Integ(aZero()).Printn(14)
+
+		// Add: (Into)-Methods? GetNextFrom, SendOneFrom, Append, GetWith ???
 
 	default:
 		fmt.Println("No such sample #", n, " - max =", max)
@@ -189,6 +237,6 @@ func sample(n int) {
 
 }
 
-const max = 48 // # of samples
+const max = 58 // # of samples
 
 // ===========================================================================
