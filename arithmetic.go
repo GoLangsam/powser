@@ -81,15 +81,17 @@ func (U PS) CMul(c Coefficient) PS {
 
 // MonMul multiplies `U` by the monomial "x^n"
 // and returns `x^n * U`.
+// If `n` is not positive, zero (an empty closed power series) is returned.
 func (U PS) MonMul(n int) PS {
 	Z := U.new()
-	go func(Z PS, U PS, n int) {
-		if !(n > 0) {
-			Z.Close()
-			U.Drop()
-			return
-		}
 
+	if !(n > 0) {
+		Z.Close()
+		U.Drop()
+		return
+	}
+
+	go func(Z PS, U PS, n int) {
 		for ; n > 0; n-- {
 			if !Z.Put(aZero()) {
 				U.Drop()
@@ -270,8 +272,16 @@ func (U PS) Subst(V PS) PS {
 
 // MonSubst Monomial Substition: `U(c*x^n)`
 // Each Ui is multiplied by `c^i` and followed by n-1 zeros.
+// If `n` is not positive, zero (an empty closed power series) is returned.
 func (U PS) MonSubst(c0 Coefficient, n int) PS {
 	Z := U.new()
+
+	if !(n > 0) {
+		Z.Close()
+		U.Drop()
+		return
+	}
+
 	go func(Z PS, U PS, c0 Coefficient, n int) {
 		c := aOne()
 		for Z.SendCfnFrom(U, cMul(c)) { // `c * u`
