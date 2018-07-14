@@ -88,7 +88,7 @@ func (U PS) MonMul(n int) PS {
 	if !(n > 0) {
 		Z.Close()
 		U.Drop()
-		return
+		return Z
 	}
 
 	go func(Z PS, U PS, n int) {
@@ -279,7 +279,7 @@ func (U PS) MonSubst(c0 Coefficient, n int) PS {
 	if !(n > 0) {
 		Z.Close()
 		U.Drop()
-		return
+		return Z
 	}
 
 	go func(Z PS, U PS, c0 Coefficient, n int) {
