@@ -79,9 +79,9 @@ func (from *Dch) From() (req chan<- struct{}, rcv <-chan *big.Rat) {
 
 // ---------------------------------------------------------------------------
 
-// GetNextFrom `from` for `into` and report success.
+// NextGetFrom `from` for `into` and report success.
 // Follow it with `into.Send( f(val) )`, if ok.
-func (into *Dch) GetNextFrom(from *Dch) (val *big.Rat, ok bool) {
+func (into *Dch) NextGetFrom(from *Dch) (val *big.Rat, ok bool) {
 	if ok = into.Next(); ok {
 		val, ok = from.Get()
 	}

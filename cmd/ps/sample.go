@@ -228,7 +228,7 @@ func sample(n int) {
 		fmt.Print("#", n, " ATan : ")
 		ps.Ones().MonSubst(aMinusOne(), 2).Integ(aZero()).Printn(14)
 
-		// Add: (Into)-Methods? GetNextFrom, SendOneFrom, Append, GetWith ???
+		// Add: (Into)-Methods? NextGetFrom, SendOneFrom, Append, GetWith ???
 
 	default:
 		fmt.Println("No such sample #", n, " - max =", max)

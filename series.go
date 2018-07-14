@@ -143,7 +143,7 @@ func Sincos() (Sin PS, Cos PS) {
 	f := func(Z PS, U PS, odd bool) {
 		var minus bool
 		for {
-			if u, ok := Z.GetNextFrom(U); ok {
+			if u, ok := Z.NextGetFrom(U); ok {
 				if odd {
 					if minus {
 						Z.Send(u.Neg(u))

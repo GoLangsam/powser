@@ -14,10 +14,10 @@ func (Into PS) Append(U PS) {
 	Into.MyDch().Append(U.MyDch())
 }
 
-// GetNextFrom `U` for `Into` and report success.
+// NextGetFrom `U` for `Into` and report success.
 // Follow with `Into.Send( f(c) )`, iff ok.
-func (Into PS) GetNextFrom(U PS) (c Coefficient, ok bool) {
-	return Into.MyDch().GetNextFrom(U.MyDch())
+func (Into PS) NextGetFrom(U PS) (c Coefficient, ok bool) {
+	return Into.MyDch().NextGetFrom(U.MyDch())
 }
 
 // GetWith returns each first value received from the two given power series

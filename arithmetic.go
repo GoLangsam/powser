@@ -171,7 +171,7 @@ func (U PS) Times(V ...PS) PS {
 func (U PS) Deriv() PS {
 	Z := U.new()
 	go func(Z PS, U PS) {
-		if _, ok := Z.GetNextFrom(U); !ok {
+		if _, ok := Z.NextGetFrom(U); !ok {
 			return
 		}
 		// constant term: drop
@@ -223,7 +223,7 @@ func (U PS) Integ(c Coefficient) PS {
 func (U PS) Recip() PS {
 	Z := U.new()
 	go func(Z PS, U PS) {
-		u, ok := Z.GetNextFrom(U)
+		u, ok := Z.NextGetFrom(U)
 		if !ok {
 			return
 		}

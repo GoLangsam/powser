@@ -54,7 +54,7 @@ func cMul(c Coefficient) func(u Coefficient) Coefficient {
 // SendCfnFrom `cfn(From)` into `Into` and report success.
 func (Into PS) SendCfnFrom(From PS, cfn func(c Coefficient) Coefficient) (ok bool) {
 	var c Coefficient
-	if c, ok = Into.GetNextFrom(From); ok {
+	if c, ok = Into.NextGetFrom(From); ok {
 		Into.Send(cfn(c))
 	}
 	return
