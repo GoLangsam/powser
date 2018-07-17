@@ -141,7 +141,7 @@ Whichever is copied to `types.go` determines the chosen realization.
 There are [wrappers](dch-wrap.go) to the underlying demand channel package:
 - `Split` returns a pair of power series identical to the given one.
 - `Append` all coefficients from `U` into `Into`.
-- `GetNextFrom` `U` for `Into` and report success. Follow with `Into.Send( f(c) )`, iff ok.
+- `NextGetFrom` `U` for `Into` and report success. Follow with `Into.Send( f(c) )`, iff ok.
 - `GetWith` returns each first value received from the two given power series together with their respective ok boolean.
 - `SendCfnFrom` applies a function `cfn(From)` to a coefficent received from `From`, sends the result into `Into` and report success.
 
