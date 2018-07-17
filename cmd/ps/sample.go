@@ -173,7 +173,6 @@ func sample(n int) {
 		fmt.Print("#", n, " Fibonaccis      : ")
 		ps.Fibonaccis().Printn(14)
 
-
 		// Cofficients:
 	case 46:
 		fmt.Print("#", n, " Shift twos by c : ")
