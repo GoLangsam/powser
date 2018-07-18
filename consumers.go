@@ -4,6 +4,10 @@
 
 package ps
 
+import (
+	"fmt"
+)
+
 // ===========================================================================
 // Consumers: Eval & Print
 
@@ -33,8 +37,6 @@ func (U PS) EvalAt(c Coefficient, n int) Coefficient {
 // for up to `n` terms in floating point.
 // Note: n=1 denotes the first, the constant term.
 func (U PS) EvalN(c Coefficient, n int) float64 {
-	defer U.Drop()
-
 	ci := float64(1)
 	fc, _ := c.Float64()
 	val := float64(0)
@@ -50,23 +52,24 @@ func (U PS) EvalN(c Coefficient, n int) float64 {
 		val += fu * ci // val += `u(i) * c^i`
 		ci = fc * ci   // `c^(i+1) = c * c^i`
 	}
+	U.Drop()
 	return val
 }
 
 // Printn prints up to n terms of a power series.
 func (U PS) Printn(n int) {
-	defer U.Drop()
-	defer print(("\n"))
+	defer fmt.Print("\n")
 
 	var u Coefficient
 	var ok bool
 	for ; n > 0; n-- {
 		if u, ok = U.Get(); !ok {
-			return
+			break
 		}
-		print(u.String())
-		print(" ")
+		fmt.Print(u.String())
+		fmt.Print(" ")
 	}
+	U.Drop()
 }
 
 // Printer returns a copy of `U`,
