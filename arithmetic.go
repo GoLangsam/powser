@@ -173,21 +173,16 @@ func (U PS) Times(V ...PS) PS {
 func (U PS) Deriv() PS {
 	Z := U.new()
 	go func(Z PS, U PS) {
-		if _, ok := Z.NextGetFrom(U); !ok {
+		u, ok := Z.NextGetFrom(U)
+		if !ok {
 			return
 		}
 		// constant term: drop
 		// Thus: we must Z.Send() before another Z.Next(),
-		// we may not use an Obtain-loop and we have to do the cleanup ourselfs.
-
-		for i := 1; ; i++ {
-			if u, ok := U.Get(); ok {
+		for i := 1; ok; i++ {
+			if u, ok = U.Get(); ok {
 				Z.Send(cRatIby1(i)(u)) // `u * i`
-				if !Z.Next() {
-					break
-				}
-			} else {
-				break
+				ok = Z.Next()
 			}
 		}
 		Z.Close()
