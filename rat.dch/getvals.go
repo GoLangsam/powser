@@ -44,10 +44,10 @@ func getValS(in ...*Dch) ([]value, []bool) {
 	}
 
 	req := make([]chan<- struct{}, n) // we request here - initially
-	snd := make([]<-chan value, n) // we might receive here
-	dat := make([]<-chan value, n) // we shall receive here
+	snd := make([]<-chan value, n)    // we might receive here
+	dat := make([]<-chan value, n)    // we shall receive here
 	oks := make([]bool, n)            // did we receive here?
-	out := make([]value, n)        // the values to be returned
+	out := make([]value, n)           // the values to be returned
 
 	for i := 0; i < n; i++ {
 		req[i], snd[i] = in[i].From() // from
