@@ -46,10 +46,9 @@ func DchMakeBuff(cap int) *Dch {
 
 // ---------------------------------------------------------------------------
 
-// Get is the comma-ok multi-valued form to receive from the channel and
+// Get is the comma-ok multi-valued form to receive from the channel.
+// It blocks until value `val` has been received from `from` and
 // reports whether a received value was sent before the channel was closed.
-//
-// Get blocks until the request is accepted and value `val` has been received from `from`.
 func (from *Dch) Get() (val *big.Rat, open bool) {
 	from.req <- struct{}{}
 	val, open = <-from.ch
@@ -92,38 +91,37 @@ func (into *Dch) NextGetFrom(from *Dch) (val *big.Rat, ok bool) {
 	return
 }
 
-// Next is the request method.
-// It returns when a request was received
-// and reports whether the request channel was open.
-//
-// Next blocks until a requested is received.
-//
-// A successful Next is to be followed by one Send(v).
-func (into *Dch) Next() bool {
-	_, ok := <-into.req
-	return ok
-}
-
-// Send is to be used after a successful Next()
-func (into *Dch) Send(val *big.Rat) {
-	into.ch <- val
-}
-
 // Put is the send-upon-request method
 // - aka "myAnyChan <- myAny".
+// It blocks until requested to send value `val` into `into` and
+// reports whether the request channel was open.
 //
 // Put is a convenience for
 //  if Next() { Send(v) }
 //
-// Put blocks until requested to send value `val` into `into`.
-func (into *Dch) Put(val *big.Rat) bool {
-	_, ok := <-into.req
+func (into *Dch) Put(val *big.Rat) (ok bool) {
+	_, ok = <-into.req
 	if ok {
 		into.ch <- val
 	} else {
 		into.Close()
 	}
-	return ok
+	return
+}
+
+// Next is the request method.
+// It blocks until a request is received and
+// reports whether the request channel was open.
+//
+// A successful Next is to be followed by one Send(v).
+func (into *Dch) Next() (ok bool) {
+	_, ok = <-into.req
+	return
+}
+
+// Send is to be used after a successful Next()
+func (into *Dch) Send(val *big.Rat) {
+	into.ch <- val
 }
 
 // Provide is the low-level send-upon-request method
@@ -132,8 +130,8 @@ func (into *Dch) Put(val *big.Rat) bool {
 // Note: Provide is low-level and differs from Put
 // as the latter closes the channel upon nok.
 // Use with care.
-func (into *Dch) Provide(val *big.Rat) bool {
-	_, ok := <-into.req
+func (into *Dch) Provide(val *big.Rat) (ok bool) {
+	_, ok = <-into.req
 	if ok {
 		into.ch <- val
 	}
