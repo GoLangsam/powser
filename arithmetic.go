@@ -220,15 +220,13 @@ func (U PS) Integ(c Coefficient) PS {
 func (U PS) Recip() PS {
 	Z := U.new()
 	go func(Z PS, U PS) {
-		u, ok := Z.NextGetFrom(U)
-		if !ok {
-			return
+		if u, ok := Z.NextGetFrom(U); ok {
+			Z.Send(aC().Inv(u)) // `1/u`
+			mu := aC().Neg(u)   // `-z` minus z
+			ZZ := U.newPair()
+			ZZ.Split(U.CMul(mu).Times(ZZ[0].Shift(u)))
+			Z.Append(ZZ[1])
 		}
-		Z.Send(aC().Inv(u)) // `1/u`
-		mu := aC().Neg(u)   // `-z` minus z
-		ZZ := U.newPair()
-		ZZ.Split(U.CMul(mu).Times(ZZ[0].Shift(u)))
-		Z.Append(ZZ[1])
 	}(Z, U)
 	return Z
 }
