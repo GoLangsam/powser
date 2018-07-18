@@ -4,18 +4,13 @@
 
 package dch // import "github.com/GoLangsam/powser/rat.dch"
 
-import (
-	// "math/big"
-	"github.com/GoLangsam/powser/rat"
-)
-
 // ===========================================================================
 // Beg of demand channel object
 
 // Dch is a
 // demand channel.
 type Dch struct {
-	ch  chan *big.Rat
+	ch  chan value
 	req chan struct{}
 }
 
@@ -25,7 +20,7 @@ type Dch struct {
 // demand channel.
 func New() *Dch {
 	d := Dch{
-		ch:  make(chan *big.Rat),
+		ch:  make(chan value),
 		req: make(chan struct{}),
 	}
 	return &d
@@ -38,7 +33,7 @@ func New() *Dch {
 // (with capacity=`cap`).
 func DchMakeBuff(cap int) *Dch {
 	d := Dch{
-		ch:  make(chan *big.Rat, cap),
+		ch:  make(chan value, cap),
 		req: make(chan struct{}),
 	}
 	return &d
@@ -49,7 +44,7 @@ func DchMakeBuff(cap int) *Dch {
 // Get is the comma-ok multi-valued form to receive from the channel.
 // It blocks until value `val` has been received from `from` and
 // reports whether a received value was sent before the channel was closed.
-func (from *Dch) Get() (val *big.Rat, open bool) {
+func (from *Dch) Get() (val value, open bool) {
 	from.req <- struct{}{}
 	val, open = <-from.ch
 	return
@@ -72,7 +67,7 @@ func (from *Dch) Drop() {
 // to receive values:
 //  `req` to send a request `req <- struct{}{}` and
 //  `rcv` to reveive such requested value from.
-func (from *Dch) From() (req chan<- struct{}, rcv <-chan *big.Rat) {
+func (from *Dch) From() (req chan<- struct{}, rcv <-chan value) {
 	return from.req, from.ch
 }
 
@@ -80,7 +75,7 @@ func (from *Dch) From() (req chan<- struct{}, rcv <-chan *big.Rat) {
 
 // NextGetFrom `from` for `into` and report success.
 // Follow it with `into.Send( f(val) )`, if ok.
-func (into *Dch) NextGetFrom(from *Dch) (val *big.Rat, ok bool) {
+func (into *Dch) NextGetFrom(from *Dch) (val value, ok bool) {
 	if ok = into.Next(); ok {
 		val, ok = from.Get()
 	}
@@ -99,7 +94,7 @@ func (into *Dch) NextGetFrom(from *Dch) (val *big.Rat, ok bool) {
 // Put is a convenience for
 //  if Next() { Send(v) }
 //
-func (into *Dch) Put(val *big.Rat) (ok bool) {
+func (into *Dch) Put(val value) (ok bool) {
 	_, ok = <-into.req
 	if ok {
 		into.ch <- val
@@ -120,7 +115,7 @@ func (into *Dch) Next() (ok bool) {
 }
 
 // Send is to be used after a successful Next()
-func (into *Dch) Send(val *big.Rat) {
+func (into *Dch) Send(val value) {
 	into.ch <- val
 }
 
@@ -130,7 +125,7 @@ func (into *Dch) Send(val *big.Rat) {
 // Note: Provide is low-level and differs from Put
 // as the latter closes the channel upon nok.
 // Use with care.
-func (into *Dch) Provide(val *big.Rat) (ok bool) {
+func (into *Dch) Provide(val value) (ok bool) {
 	_, ok = <-into.req
 	if ok {
 		into.ch <- val
@@ -143,7 +138,7 @@ func (into *Dch) Provide(val *big.Rat) (ok bool) {
 // to send values:
 //  `req` to receive a request `<-req` and
 //  `snd` to send such requested value into.
-func (into *Dch) Into() (req <-chan struct{}, snd chan<- *big.Rat) {
+func (into *Dch) Into() (req <-chan struct{}, snd chan<- value) {
 	return into.req, into.ch
 }
 

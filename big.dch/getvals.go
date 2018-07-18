@@ -4,16 +4,11 @@
 
 package dch
 
-import (
-	"math/big"
-	// "github.com/GoLangsam/powser/rat"
-)
-
 // ===========================================================================
 
 // GetWith returns each first value received from the two given demand channels
 // together with their respective ok boolean.
-func (from *Dch) GetWith(with *Dch) (valFrom *big.Rat, okFrom bool, valWith *big.Rat, okWith bool) {
+func (from *Dch) GetWith(with *Dch) (valFrom value, okFrom bool, valWith value, okWith bool) {
 
 	reqFrom, sndFrom := from.req, from.ch
 	reqWith, sndWith := with.req, with.ch
@@ -42,17 +37,17 @@ func (from *Dch) GetWith(with *Dch) (valFrom *big.Rat, okFrom bool, valWith *big
 // getValS returns a slice with each first value received from the given demand channels.
 //
 // BUG: As of now, it works for pairs only!
-func getValS(in ...*Dch) ([]*big.Rat, []bool) {
+func getValS(in ...*Dch) ([]value, []bool) {
 	n := len(in)
 	if n != 2 {
 		panic("getValS must have exactly 2 arguments")
 	}
 
 	req := make([]chan<- struct{}, n) // we request here - initially
-	snd := make([]<-chan *big.Rat, n) // we might receive here
-	dat := make([]<-chan *big.Rat, n) // we shall receive here
+	snd := make([]<-chan value, n) // we might receive here
+	dat := make([]<-chan value, n) // we shall receive here
 	oks := make([]bool, n)            // did we receive here?
-	out := make([]*big.Rat, n)        // the values to be returned
+	out := make([]value, n)        // the values to be returned
 
 	for i := 0; i < n; i++ {
 		req[i], snd[i] = in[i].From() // from
