@@ -251,14 +251,11 @@ func (U PS) Exp() PS {
 func (U PS) Subst(V PS) PS {
 	Z := U.new()
 	go func(Z PS, U, V PS) {
-		if !Z.SendCfnFrom(U, cSame()) {
-			return
+		if Z.SendCfnFrom(U, cSame()) {
+			VV := V.Split()
+			VV[0].Get() // Note: Any nonzero constant term of `V` is ignored.
+			Z.Append(VV[0].Times(U.Subst(VV[1])))
 		}
-
-		VV := V.Split()
-		VV[0].Get() // Note: Any nonzero constant term of `V` is ignored.
-		Z.Append(VV[0].Times(U.Subst(VV[1])))
-
 	}(Z, U, V)
 	return Z
 }
