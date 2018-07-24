@@ -18,8 +18,8 @@ import (
 // Output variables: ...,Y,Z
 
 // EvalAt evaluates a power series at `x=c`
-// for up to `n` terms.
-// Note: n=1 denotes the first, the constant term.
+// for up to `n` terms,
+// where `n=1` denotes the first, the constant term.
 func (U PS) EvalAt(c Coefficient, n int) Coefficient {
 	u, ok := U.Get()
 	switch {
@@ -34,8 +34,8 @@ func (U PS) EvalAt(c Coefficient, n int) Coefficient {
 }
 
 // EvalN evaluates a power series at `x=c`
-// for up to `n` terms in floating point.
-// Note: n=1 denotes the first, the constant term.
+// for up to `n` terms in floating point,
+// where `n=1` denotes the first, the constant term.
 func (U PS) EvalN(c Coefficient, n int) float64 {
 	ci := float64(1)
 	fc, _ := c.Float64()
