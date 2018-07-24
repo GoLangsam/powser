@@ -18,24 +18,24 @@ func sample(n int) {
 
 	switch n {
 
-	// Plus Less
+	// Series
 	case 1:
-		fmt.Print("#", n, " Ones: ")
+		fmt.Print("#", n, " Ones = 1 / (1-x): ")
 		ps.Ones().Printn(20)
 	case 2:
-		fmt.Print("#", n, " Twos: ")
-		ps.Twos().Printn(20)
+		fmt.Print("#", n, " Harmonics       : ")
+		ps.Harmonics().Printn(14)
 
 	case 3:
 		fmt.Print("#", n, " Factorials      : ")
-		ps.Factorials().Printn(10)
+		ps.Factorials().Printn(14)
 	case 4:
 		fmt.Print("#", n, " Fibonaccis      : ")
 		ps.Fibonaccis().Printn(14)
 
 	case 5:
 		fmt.Print("#", n, " 1 / Fact = e^x  : ")
-		ps.OneByFactorial().Printn(10)
+		ps.OneByFactorial().Printn(14)
 	case 6:
 		fmt.Print("#", n, " 1 / Fibonacci   : ")
 		ps.OneByFibonacci().Printn(14)

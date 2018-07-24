@@ -84,7 +84,7 @@ func AdInfinitum(c Coefficient) PS {
 
 // ===========================================================================
 
-// Factorials starting from zero: 1, 1, 2, 6, 24, 120, 720, 5040, 40.320 ...
+// Factorials starting from zero: 1, 1, 2, 6, 24, 120, 720, 5040 ...
 func Factorials() PS {
 	Z := New()
 	go func(Z PS) {
@@ -96,7 +96,7 @@ func Factorials() PS {
 	return Z
 }
 
-// OneByFactorial starting from zero: 1/1, 1/1, 1/2, 1/6, 1/120, 1/720 ...
+// OneByFactorial starting from zero: 1/1, 1/1, 1/2, 1/6, 1/120 ...
 func OneByFactorial() PS {
 	Z := New()
 	go func(Z PS) {
@@ -108,7 +108,7 @@ func OneByFactorial() PS {
 	return Z
 }
 
-// Fibonaccis starting from zero: 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 114 ...
+// Fibonaccis starting from zero: 1, 2, 3, 5, 8, 13, 21, 34, 55, 89 ...
 func Fibonaccis() PS {
 	Z := New()
 	go func(Z PS) {
@@ -120,13 +120,26 @@ func Fibonaccis() PS {
 	return Z
 }
 
-// OneByFibonacci starting from zero: 1/1, 1/2, 1/3, 1/5, 1/8, 1/13, 1/21 ...
+// OneByFibonacci starting from zero: 1/1, 1/2, 1/3, 1/5, 1/8, 1/13 ...
 func OneByFibonacci() PS {
 	Z := New()
 	go func(Z PS) {
 		prev, curr := aZero(), aOne()
 		for Z.Put(aC().Inv(curr)) {
 			prev, curr = curr, aC().Add(curr, prev)
+		}
+	}(Z)
+	return Z
+}
+
+// Harmonics: 1, 1+ 1/2, 1+ 1/2+ 1/3, 1+ 1/2+ 1/3+ 1/4 ...
+//  `1/(1-x) * ln( 1/(1-x) )`
+func Harmonics() PS {
+	Z := New()
+	go func(Z PS) {
+		curr := aOne()
+		for i := 2; Z.Put(curr); i++ {
+			curr = aC().Add(curr, rat1byI(i))
 		}
 	}(Z)
 	return Z
