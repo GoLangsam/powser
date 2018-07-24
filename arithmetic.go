@@ -214,17 +214,17 @@ func (U PS) Integ(c Coefficient) PS {
 //	`(u+x*UU)*(z+x*ZZ) = 1`
 //	`z = 1/u`
 //	`u*ZZ + z*UU + x*UU*ZZ = 0`
-//
+//  ZZ = `-UU*(z+x*ZZ)/u`
 //	ZZ = `1/u * -UU * (z + x*ZZ)`
-//	ZZ = `1/u * (-z*UU + x*UU*ZZ)`
 func (U PS) Recip() PS {
 	Z := U.new()
 	go func(Z PS, U PS) {
 		if u, ok := Z.NextGetFrom(U); ok {
-			Z.Send(aC().Inv(u)) // `1/u`
-			mu := aC().Neg(u)   // `-z` minus z
+			ru := aC().Inv(u)   // ` z = 1/u`
+			mz := aC().Neg(ru)  // `-z` minus z
+			Z.Send(aC().Inv(u)) // ` z = 1/u`
 			ZZ := U.newPair()
-			ZZ.Split(U.CMul(mu).Times(ZZ[0].Shift(u)))
+			ZZ.Split(U.CMul(mz).Times(ZZ[0].Shift(ru)))
 			Z.Append(ZZ[1])
 		}
 	}(Z, U)
