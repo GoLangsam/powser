@@ -92,7 +92,7 @@ func (into *Dch) NextGetFrom(from *Dch) (val value, ok bool) {
 // reports whether the request channel was open.
 //
 // Put is a convenience for
-//  if Next() { Send(v) }
+//  if Next() { Send(v) } else { Close() }
 //
 func (into *Dch) Put(val value) (ok bool) {
 	_, ok = <-into.req
