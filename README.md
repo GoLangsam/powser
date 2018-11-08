@@ -5,6 +5,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/GoLangsam/pipe)](https://goreportcard.com/report/github.com/GoLangsam/powser)
 [![Build Status](https://travis-ci.org/GoLangsam/powser.svg?branch=master)](https://travis-ci.org/GoLangsam/powser)
 [![GoDoc](https://godoc.org/github.com/GoLangsam/powser?status.svg)](https://godoc.org/github.com/GoLangsam/powser)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2FGoLangsam%2Fpowser.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2FGoLangsam%2Fpowser?ref=badge_shield)
 
 ## Overview
 [Power series](https://en.wikipedia.org/wiki/Formal_power_series) - with [rational](https://en.wikipedia.org/wiki/Rational_number) coefficients.
@@ -154,3 +155,7 @@ and in other places calculations are intentionally done directly and explicit.
 provides special (and non-exported) rational coefficients such a `aZero` or `aOne`.
 
 ---
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2FGoLangsam%2Fpowser.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2FGoLangsam%2Fpowser?ref=badge_large)
