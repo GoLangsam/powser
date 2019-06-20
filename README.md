@@ -154,3 +154,9 @@ and in other places calculations are intentionally done directly and explicit.
 provides special (and non-exported) rational coefficients such a `aZero` or `aOne`.
 
 ---
+Your suggestions, remarks, questions and/or contributions are welcome ;-)
+
+---
+## Think deep - code happy - be simple - see clear :-)
+
+---
