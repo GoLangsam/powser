@@ -194,6 +194,23 @@ func Cos() PS {
 	return V
 }
 
+// Sec returns the power series for secans (in radians)
+// as `1/Cos`.
+func Sec() PS {
+	U, V := Sincos()
+	U.Drop()
+	return V.Recip()
+}
+
+// CscX returns the power series for cosecans (in radians) * x
+// as `1/(Sin*1/x)`.
+func CscX() PS {
+	U, V := Sincos()
+	V.Drop()
+	U.Get()
+	return U.Recip()
+}
+
 // Tan returns the power series for tangens (in radians)
 // as `Sin/Cos`.
 func Tan() PS {

@@ -24,21 +24,21 @@ func sample(n int) {
 		ps.Ones().Printn(20)
 	case 2:
 		fmt.Print("#", n, " Harmonics       : ")
-		ps.Harmonics().Printn(14)
+		ps.Harmonics().Printn(13)
 
 	case 3:
 		fmt.Print("#", n, " Factorials      : ")
 		ps.Factorials().Printn(14)
 	case 4:
 		fmt.Print("#", n, " Fibonaccis      : ")
-		ps.Fibonaccis().Printn(14)
+		ps.Fibonaccis().Printn(18)
 
 	case 5:
 		fmt.Print("#", n, " 1 / Fact = e^x  : ")
 		ps.OneByFactorial().Printn(14)
 	case 6:
 		fmt.Print("#", n, " 1 / Fibonacci   : ")
-		ps.OneByFibonacci().Printn(14)
+		ps.OneByFibonacci().Printn(18)
 
 	case 7:
 		fmt.Print("#", n, " Sinus           : ")
@@ -108,13 +108,13 @@ func sample(n int) {
 		poly().Plus(sqr()).Printn(17)
 	case 26:
 		fmt.Print("#", n, " 1+9 : ")
-		poly().Plus(one(), lin(), sqr(), one(), lin(), sqr()).Printn(15)
+		poly().Plus(one(), lin(), sqr(), one(), lin(), sqr()).Printn(20)
 	case 27:
 		fmt.Print("#", n, " 1-  : ")
 		sqr().Less().Printn(20)
 	case 28:
 		fmt.Print("#", n, " 1-2 : ")
-		sqr().Less(lin()).Printn(18)
+		sqr().Less(lin()).Printn(20)
 	case 29:
 		fmt.Print("#", n, " 1-9 : ")
 		poly().Less(one(), lin(), sqr(), one(), lin(), sqr()).Printn(18)
@@ -135,16 +135,16 @@ func sample(n int) {
 		ps.Ones().Times().Printn(20)
 	case 34:
 		fmt.Print("#", n, " 1*2 : ")
-		ps.Ones().Times(ps.Twos()).Printn(16)
+		ps.Ones().Times(ps.Twos()).Printn(20)
 	case 35:
 		fmt.Print("#", n, " 1*9 : ")
 		ps.Ones().Times(ps.Ones(), ps.Twos(), ps.Ones(), ps.Twos(), ps.Ones(), ps.Twos()).Printn(14)
 	case 36:
 		fmt.Print("#", n, " Subst 2in1: ")
-		ps.Ones().Subst(ps.Twos()).Printn(6)
+		ps.Ones().Subst(ps.Twos()).Printn(14)
 	case 37:
 		fmt.Print("#", n, " MonSubst  : ")
-		ps.Ones().MonSubst(aMinusOne(), 3).Printn(14)
+		ps.Ones().MonSubst(aMinusOne(), 3).Printn(20)
 	case 38:
 		fmt.Print("#", n, " Subst c...: ")
 		ps.Ones().Subst(ps.AdInfinitum(aCoeff())).Printn(16)
@@ -198,26 +198,26 @@ func sample(n int) {
 		// Analysis:
 	case 51:
 		fmt.Print("#", n, " Deriv: ")
-		ps.Ones().Deriv().Printn(11)
+		ps.Ones().Deriv().Printn(18)
 	case 52:
 		fmt.Print("#", n, " Integ: ")
-		ps.Ones().Integ(aZero()).Printn(12)
+		ps.Ones().Integ(aZero()).Printn(18)
 
 	case 53:
 		fmt.Print("#", n, " Deriv: ")
-		sqr().Deriv().Printn(11)
+		sqr().Deriv().Printn(14)
 	case 54:
 		fmt.Print("#", n, " Integ: ")
-		lin().Integ(aZero()).Printn(12)
+		lin().Integ(aZero()).Printn(14)
 
 		// Functions:
 	case 55:
 		fmt.Print("#", n, " Exp  : ")
-		ps.Ones().Exp().Printn(9)
+		ps.Ones().Exp().Printn(11)
 
 	case 56:
 		fmt.Print("#", n, " ATan : ")
-		ps.Ones().MonSubst(aMinusOne(), 2).Integ(aZero()).Printn(14)
+		ps.Ones().MonSubst(aMinusOne(), 2).Integ(aZero()).Printn(18)
 
 	case 57:
 		fmt.Print("#", n, " Tan  : ")
@@ -226,6 +226,14 @@ func sample(n int) {
 	case 58:
 		fmt.Print("#", n, " Cot*x: ")
 		ps.CotX().Printn(14)
+
+	case 59:
+		fmt.Print("#", n, " Sec  : ")
+		ps.Sec().Printn(14)
+
+	case 60:
+		fmt.Print("#", n, " Csc*x: ")
+		ps.CscX().Printn(14)
 
 		// Add: (Into)-Methods? NextGetFrom, SendOneFrom, Append, GetWith ???
 
@@ -236,6 +244,6 @@ func sample(n int) {
 
 }
 
-const max = 58 // # of samples
+const max = 60 // # of samples
 
 // ===========================================================================
