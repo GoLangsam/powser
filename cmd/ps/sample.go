@@ -220,12 +220,12 @@ func sample(n int) {
 		ps.Ones().MonSubst(aMinusOne(), 2).Integ(aZero()).Printn(14)
 
 	case 57:
-		fmt.Print("#", n, " Exp  : ")
-		lin().Exp().Printn(9)
+		fmt.Print("#", n, " Tan  : ")
+		ps.Tan().Printn(14)
 
 	case 58:
-		fmt.Print("#", n, " ATan : ")
-		ps.Ones().MonSubst(aMinusOne(), 2).Integ(aZero()).Printn(14)
+		fmt.Print("#", n, " Cot*x: ")
+		ps.CotX().Printn(14)
 
 		// Add: (Into)-Methods? NextGetFrom, SendOneFrom, Append, GetWith ???
 

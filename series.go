@@ -194,4 +194,19 @@ func Cos() PS {
 	return V
 }
 
+// Tan returns the power series for tangens (in radians)
+// as `Sin/Cos`.
+func Tan() PS {
+	U, V := Sincos()
+	return U.Times(V.Recip())
+}
+
+// CotX returns the power series for cotangens (in radians) * x
+// as `Cos/(Sin*1/x)`.
+func CotX() PS {
+	U, V := Sincos()
+	U.Get()
+	return V.Times(U.Recip())
+}
+
 // ===========================================================================
