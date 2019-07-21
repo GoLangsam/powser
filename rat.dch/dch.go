@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package dch // import "github.com/GoLangsam/powser/rat.dch"
+package dch
 
 // ===========================================================================
 // Beg of demand channel object
@@ -41,9 +41,10 @@ func DchMakeBuff(cap int) *Dch {
 
 // ---------------------------------------------------------------------------
 
-// Get is the comma-ok multi-valued form to receive from the channel.
-// It blocks until value `val` has been received from `from` and
+// Get is the comma-ok multi-valued form to receive from the channel and
 // reports whether a received value was sent before the channel was closed.
+//
+// Get blocks until the request is accepted and value `val` has been received from `from`.
 func (from *Dch) Get() (val value, open bool) {
 	from.req <- struct{}{}
 	val, open = <-from.ch
@@ -88,7 +89,8 @@ func (into *Dch) NextGetFrom(from *Dch) (val value, ok bool) {
 
 // Put is the send-upon-request method
 // - aka "myAnyChan <- myAny".
-// It blocks until requested to send value `val` into `into` and
+//
+// Put blocks until requested to send value `val` into `into` and
 // reports whether the request channel was open.
 //
 // Put is a convenience for

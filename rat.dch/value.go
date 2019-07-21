@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package dch
+package dch // import "github.com/GoLangsam/powser/rat.dch"
 
 import (
 	// "math/big"
