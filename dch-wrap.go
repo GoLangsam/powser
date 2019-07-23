@@ -6,7 +6,7 @@ package ps
 
 // ===========================================================================
 // Wrappers for multi-argument methods
-// use dch.MyDchInto() and dch.MyDchFrom() to obtain the anonymously embedded value
+// use dch.MyDch() to obtain the anonymously embedded value
 // and invoke its underlying method.
 
 // Append all coefficients from `U` into `Into`.

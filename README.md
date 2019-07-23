@@ -49,7 +49,7 @@ Note: `powser` is inspired by a test from the standard Go distribution (`test/ch
 This implementation makes a clear separation between the power series themselves,
 and the coefficients and their demand channels, which live in separate packages.
 
-And all the spawned goroutines do not leak! They all terminate. Both
+And all the spawned goroutines do not leak! They all terminate. And close their channel. Both
 - upon input being closed by the producer (lacking more data: a finite power series aka polynom) - and 
 - upon output being dropped by the consumer (as there is no need for further coefficients).
 
@@ -59,22 +59,16 @@ And: The expression of the mathematical algorithms (e.g. in [arithmetic](#arithm
 is more tight in this implementation thanks to the helpers and the channel handling package
 (even so some more lines need to cater for resource cleanup: Drop/Close).
 
+Note: We use and chain methods here instead of nesting functions (as in the [original paper](https://swtch.com/~rsc/thread/squint.pdf)).
+Thus: Sometimes a formula appears to be written backwards. Read carefully,
+
 The overall result is too good, powerful and complete
 as to serve as an example only in the related project [`pipe/s`](https://github.com/GoLangsam/pipe)
 and thus is given here as an independent and stand-alone repository in the hope to be useful for someone.
 
-Note: A considerable weakness of the approach taken and discussed in [Squinting at Power Series](https://swtch.com/~rsc/thread/squint.pdf)
-is the `Split` method used e.g. for multiplication: it spawns another goroutine per value just in order to queue values not dispatchable yet.
-
-A simple internal use of a circular ring buffer as queue effectively avoids such waste of precious resources.
-An implementation can (soon) be found [here](https://github.com/GoLangsam/ps).
-
-And a clear and type-safe distinction between send-only and receive-only channels
-provides much more safety for clients of the channel package.
-
 Last, but not least, power series are just _one_ usecase for concurrency and demand channels.
 Others, such as [continued fractions](https://en.wikipedia.org/wiki/Continued_fraction) await to be explored and conquered.
-Using generic tools from [`pipe/s`](https://github.com/GoLangsam/pipe) should ease such undertaking.
+(Using generic tools from [`pipe/s`](https://github.com/GoLangsam/pipe) might ease such undertaking.)
 
 ---
 ## Details
@@ -143,12 +137,6 @@ There are [wrappers](dch-wrap.go) to the underlying demand channel package:
 - `Append` all coefficients from `U` into `Into`.
 - `NextGetFrom` `U` for `Into` and report success. Follow with `Into.Send( f(c) )`, iff ok.
 - `GetWith` returns each first value received from the two given power series together with their respective ok boolean.
-- `SendCfnFrom` applies a function `cfn(From)` to a coefficent received from `From`, sends the result into `Into` and report success.
-
-And for the latter one there are closure functions on some coefficient math - for convenient use with `SendCfnFrom`
-
-Note: Such closures are used where it helps to tighten the implementation of an algorithm,
-and in other places calculations are intentionally done directly and explicit.
 
 ### [Coefficients](coefficients.go)
 provides special (and non-exported) rational coefficients such a `aZero` or `aOne`.

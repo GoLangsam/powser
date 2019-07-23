@@ -1,0 +1,219 @@
+package ps // import "github.com/GoLangsam/powser"
+
+
+FUNCTIONS
+
+func Equal(a, b Coefficient) bool
+    Equal discriminates iff coefficient `a` is equal to `b`.
+
+func IsZero(c Coefficient) bool
+    IsZero discriminates iff coefficient `c` is equal to zero.
+
+func Sincos() (Sin PS, Cos PS)
+    Sincos returns the power series for sine and cosine (in radians).
+
+
+TYPES
+
+type Coefficient = *big.Rat
+    Coefficient of a power series - a rational number in this case.
+
+    Note: Coefficients just need to provide:
+    `Equal(a, b)` to discriminate iff `a` is equal to `b`.
+    `IsZero(a)` to discriminate iff coefficient `a` is equal to zero.
+    `Add(a, b)` as commutative and associative addition with `aZero` as neutral element,
+    `Sub(a, b)` as subtraction, and `Neg(a)` as convenience for `-a` (so `Add(a, Neg(a)) == aZero`),
+    `Mul(a, b)` as commutative and associative multiplication with `aOne` as neutral element,
+    `Inv(a)` as the inverse of multiplication `1/a` (for `a` not == aZero).
+
+    Note: `Inv(a)` is for `U.Recip()` only; remove for coefficients with no inverse.
+
+func NewCoefficient(a, b int64) Coefficient
+    NewCoefficient returns a new coefficient: the rational `a/b`.
+
+type PS struct {
+	*dch.Dch
+}
+    PS represents a power series as a demand channel of it's coefficients.
+
+func AdInfinitum(c Coefficient) PS
+    AdInfinitum repeats coefficient `c` ad infinitum and returns `c^i`.
+
+func Binomial(c Coefficient) PS
+    Binomial returns `(1+x)^c`, a finite polynom iff `c` is a positive and an
+    alternating infinite power series otherwise.
+
+func Cos() PS
+    Cos returns the power series for cosine (in radians).
+
+func CotX() PS
+    CotX returns the power series for cotangens (in radians) * x as
+    `Cos/(Sin*1/x)`.
+
+func CscX() PS
+    CscX returns the power series for cosecans (in radians) * x as
+    `1/(Sin*1/x)`.
+
+func Factorials() PS
+    Factorials starting from zero: 1, 1, 2, 6, 24, 120, 720, 5040 ...
+
+func Fibonaccis() PS
+    Fibonaccis starting from zero: 1, 2, 3, 5, 8, 13, 21, 34, 55, 89 ...
+
+func Harmonics() PS
+    Harmonics: 1, 1+ 1/2, 1+ 1/2+ 1/3, 1+ 1/2+ 1/3+ 1/4 ...
+
+    `1/(1-x) * ln( 1/(1-x) )`
+
+func Monomial(c Coefficient, n int) PS
+    Monomial returns `c * x^n`.
+
+func New() PS
+    New returns a fresh power series.
+
+func OneByFactorial() PS
+    OneByFactorial starting from zero: 1/1, 1/1, 1/2, 1/6, 1/120 ...
+
+func OneByFibonacci() PS
+    OneByFibonacci starting from zero: 1/1, 1/2, 1/3, 1/5, 1/8, 1/13 ...
+
+func Ones() PS
+    Ones are 1 1 1 1 1 ... = `1/(1-x)` with a simple pole at `x=1`.
+
+func Polynom(a ...Coefficient) PS
+    Polynom converts coefficients, constant term `c` first, to a (finite) power
+    series, the polynom in the coefficients.
+
+func Sec() PS
+    Sec returns the power series for secans (in radians) as `1/Cos`.
+
+func Sin() PS
+    Sin returns the power series for sine (in radians).
+
+func Tan() PS
+    Tan returns the power series for tangens (in radians) as `Sin/Cos`.
+
+func Twos() PS
+    Twos are 2 2 2 2 2 ... just for samples.
+
+func (Into PS) Append(U PS)
+    Append all coefficients from `U` into `Into`.
+
+func (U PS) CMul(c Coefficient) PS
+    CMul multiplies `U` by a constant `c` and returns `c*U`.
+
+func (U PS) Deriv() PS
+    Deriv differentiates `U` and returns the derivative.
+
+func (U PS) EvalAt(c Coefficient, n int) Coefficient
+    EvalAt evaluates a power series at `x=c` for up to `n` terms, where `n=1`
+    denotes the first, the constant term.
+
+func (U PS) EvalN(c Coefficient, n int) float64
+    EvalN evaluates a power series at `x=c` for up to `n` terms in floating
+    point, where `n=1` denotes the first, the constant term.
+
+func (U PS) Exp() PS
+    Exp onentiation of a power series (with constant term equal zero):
+
+    Z = exp(U)
+    DZ = Z*DU
+    integrate to get Z
+
+    Note: The constant term is simply ignored as any nonzero constant term would
+    imply nonrational coefficients.
+
+func (U PS) GetWith(V PS) (cU Coefficient, okU bool, cV Coefficient, okV bool)
+    GetWith returns each first value received from the two given power series
+    together with their respective ok boolean.
+
+func (U PS) Integ(c Coefficient) PS
+    Integ integrates `U` with `c` as constant of integration.
+
+func (U PS) Less(V ...PS) PS
+    Less subtracts powerseries from `U` and returns the difference.
+    Tail-recursion is used to achieve this.
+
+func (U PS) MonMul(n int) PS
+    MonMul multiplies `U` by the monomial "x^n" and returns `x^n * U`.
+
+    If `n` is not positive, zero (an empty closed power series) is returned.
+
+func (U PS) MonSubst(c0 Coefficient, n int) PS
+    MonSubst Monomial Substition: `U(c*x^n)` Each Ui is multiplied by `c^i` and
+    followed by n-1 zeros.
+
+    If `n` is not positive, zero (an empty closed power series) is returned.
+
+func (Into PS) NextGetFrom(U PS) (c Coefficient, ok bool)
+    NextGetFrom `U` for `Into` and report success. Follow with `Into.Send( f(c)
+    )`, iff ok.
+
+func (U PS) Plus(V ...PS) PS
+    Plus adds powerseries to `U` and returns the sum. Tail-recursion is used to
+    achieve this.
+
+func (U PS) Print()
+    Print one billion terms. Use at Your own risk ;-)
+
+func (U PS) Printer(n int) PS
+    Printer returns a copy of `U`, and concurrently prints up to n terms of it.
+    Useful to inspect formulas as it can be chained.
+
+func (U PS) Printn(n int)
+    Printn prints up to n terms of a power series.
+
+func (U PS) Recip() PS
+    Recip rocal of a power series. The algorithm is:
+
+    	let U = `u + x*UU`
+    	let Z = `z + x*ZZ`
+    	`(u+x*UU)*(z+x*ZZ) = 1`
+    	`z = 1/u`
+    	`u*ZZ + z*UU + x*UU*ZZ = 0`
+     ZZ = `-UU*(z+x*ZZ)/u`
+    	ZZ = `1/u * -UU * (z + x*ZZ)`
+
+func (U PS) Revert() PS
+    Revert U, where the constant term of U is zero: Find the functional inverse
+    of power series U. That is, find Z such that Z(U(x)) = U(Z(x)) = x.
+
+    let U = `u + x*UU`
+    let Z = `z + x*ZZ`
+    then Z := U.Revert() must fullfill `x * ZZ * UU(Z) = x`
+
+    Note: Any nonzero constant term of `U` is simply ignored.
+
+    U(x) = 0 + x UU = 0 + x*u + x^2 U", Z(x) = 0 + x ZZ = 0 + x*z + x^2 Z",
+
+    x * ZZ * UU(Z) = x
+
+    ZZ = z + x*Z" = 1/u * ( 1 - x ZZ * ZZ * U"(Z))
+
+    = 1/u + x * ( -1/u ) * ZZ * ZZ * U"(Z)
+
+func (Into PS) SendCfnFrom(From PS, cfn func(c Coefficient) Coefficient) (ok bool)
+    SendCfnFrom `cfn(From)` into `Into` and report success.
+
+func (U PS) Shift(c Coefficient) PS
+    Shift returns `c + x*U`
+
+func (U PS) Split() [2]PS
+    Split returns a pair of power series identical to the given one.
+
+func (U PS) Subst(V PS) PS
+    Subst itute V for x in U, where the constant term of V is zero:
+
+    let U = `u + x*UU`
+    let V = `v + x*VV`
+    then U.Subst(V) = `u + VV * U.Subst(VV)`
+
+    Note: Any nonzero constant term of `V` is simply ignored.
+
+func (U PS) Times(V ...PS) PS
+    Times multiplies powerseries to `U` and returns the total product.
+    Tail-recursion is used to achieve this.
+
+func (U PS) XMul() PS
+    XMul multiplies `U` by `x` (by the monomial "x^1") and returns `x * U`.
+
