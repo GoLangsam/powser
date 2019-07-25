@@ -101,7 +101,7 @@ func OneByFactorial() PS {
 	Z := New()
 	go func(Z PS) {
 		curr := aOne()
-		for i := 1; Z.Put(aC().Inv(curr)); i++ {
+		for i := 1; Z.Put(cInv()(curr)); i++ {
 			curr = curr.Mul(curr, ratIby1(i))
 		}
 	}(Z)
@@ -114,7 +114,7 @@ func Fibonaccis() PS {
 	go func(Z PS) {
 		prev, curr := aZero(), aOne()
 		for Z.Put(curr) {
-			prev, curr = curr, aC().Add(curr, prev)
+			prev, curr = curr, cAdd(curr)(prev)
 		}
 	}(Z)
 	return Z
@@ -125,8 +125,8 @@ func OneByFibonacci() PS {
 	Z := New()
 	go func(Z PS) {
 		prev, curr := aZero(), aOne()
-		for Z.Put(aC().Inv(curr)) {
-			prev, curr = curr, aC().Add(curr, prev)
+		for Z.Put(cInv()(curr)) {
+			prev, curr = curr, cAdd(curr)(prev)
 		}
 	}(Z)
 	return Z
@@ -139,7 +139,7 @@ func Harmonics() PS {
 	go func(Z PS) {
 		curr := aOne()
 		for i := 2; Z.Put(curr); i++ {
-			curr = aC().Add(curr, rat1byI(i))
+			curr = cAdd(curr)(rat1byI(i))
 		}
 	}(Z)
 	return Z

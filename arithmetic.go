@@ -28,7 +28,7 @@ func add(U, V PS) PS {
 			if !okU && !okV {
 				return
 			}
-			Z.Send(aC().Add(u, v)) // `u + v`
+			Z.Send(cAdd(u)(v)) // `u + v`
 		}
 	}(Z, U, V)
 	return Z
@@ -145,7 +145,7 @@ func mul(U, V PS) PS {
 			return
 		}
 
-		Z.Send(aC().Mul(u, v))                 // `u*v`
+		Z.Send(cMul(u)(v))                     // `u*v`
 		UU, VV := U.Split(), V.Split()         // `UU`, `VV`
 		W := VV[0].CMul(u).Plus(UU[0].CMul(v)) // `u*VV + v*UU`
 		if Z.SendCfnFrom(W, cSame()) {         // ` + x*(u*VV+v*UU)`
@@ -221,9 +221,9 @@ func (U PS) Recip() PS {
 	Z := U.new()
 	go func(Z PS, U PS) {
 		if u, ok := Z.NextGetFrom(U); ok {
-			ru := aC().Inv(u)   // ` z = 1/u`
-			mz := aC().Neg(ru)  // `-z` minus z
-			Z.Send(aC().Inv(u)) // ` z = 1/u`
+			ru := cInv()(u)   // ` z = 1/u`
+			mz := cNeg()(ru)  // `-z` minus z
+			Z.Send(cInv()(u)) // ` z = 1/u`
 			ZZ := U.newPair()
 			ZZ.Split(U.CMul(mz).Times(ZZ[0].Shift(ru)))
 			Z.Append(ZZ[1])
@@ -277,8 +277,8 @@ func (U PS) MonSubst(c0 Coefficient, n int) PS {
 	go func(Z PS, U PS, c0 Coefficient, n int) {
 		c := aOne()
 		for Z.SendCfnFrom(U, cMul(c)) { // `c * u`
-			for i := 1; i < n; i++ {
-				if !Z.Put(aZero()) { // n-1 zeros
+			for i := 1; i < n; i++ { // n-1 zeros
+				if !Z.Put(aZero()) {
 					U.Drop()
 					return
 				}

@@ -26,7 +26,7 @@ func (U PS) EvalAt(c Coefficient, n int) Coefficient {
 	case ok && n == 1:
 		return u
 	case ok && n > 1:
-		return aC().Add(u, aC().Mul(c, U.EvalAt(c, n-1))) // `u + c*U`
+		return cAdd(u)(cMul(c)(U.EvalAt(c, n-1))) // `u + c*U`
 	default:
 		U.Drop()
 		return aZero()

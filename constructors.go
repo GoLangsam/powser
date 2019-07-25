@@ -51,8 +51,8 @@ func Binomial(c Coefficient) PS {
 			if !Z.Provide(iZ) {
 				return
 			}
-			iZ.Mul(iZ, aC().Mul(c, rat1byI(i))) // `iZ = iZ * c * 1/i`
-			c.Sub(c, aOne())                    // `c = c-1`
+			iZ.Mul(iZ, cRat1byI(i)(c)) // `iZ = iZ * c * 1/i`
+			c.Sub(c, aOne())           // `c = c-1`
 			i++
 		}
 	}(Z, c)
