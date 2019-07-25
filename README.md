@@ -112,9 +112,16 @@ provides functions which return specific power series such as:
 - `OneByFactorial` starting from zero: 1/1, 1/1, 1/2, 1/6, 1/120, 1/720 ...
 - `Fibonaccis` starting from zero: 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 114 ...
 - `OneByFibonacci` starting from zero: 1/1, 1/2, 1/3, 1/5, 1/8, 1/13, 1/21 ...
+- `Harmonics`: 1, 1+ 1/2, 1+ 1/2+ 1/3, 1+ 1/2+ 1/3+ 1/4, 1+ 1/2+ 1/3+ 1/4+ 1/5 ...
 - `Sincos` returns the power series for sine and cosine (in radians).
 - `Sin` returns the power series for sine (in radians).
 - `Cos` returns the power series for cosine (in radians).
+- `Tan` returns the power series for tangens (in radians) as `Sin/Cos`.
+- `ATan` returns the power series for tangens (in radians) as `Integ( 1 / ( 1 + x°2 ) )`
+- `Sec` returns the power series for secans (in radians) as `1/Cos`.
+- `CscX` returns the power series for cosecans (in radians) * x as `1/(Sin*1/x)`.
+- `CotX` returns the power series for cotangens (in radians) * x as `Cos/(Sin*1/x)`.
+- `TanR` returns the power series for tangens (in radians) as `ATan.Revert`.
 
 ### [Consumers](consumers.go)
 provides methods to evaluate or print a given power series such as:
@@ -137,6 +144,12 @@ There are [wrappers](dch-wrap.go) to the underlying demand channel package:
 - `Append` all coefficients from `U` into `Into`.
 - `NextGetFrom` `U` for `Into` and report success. Follow with `Into.Send( f(c) )`, iff ok.
 - `GetWith` returns each first value received from the two given power series together with their respective ok boolean.
+- `SendCfnFrom` applies a function `cfn(From)` to a coefficent received from `From`, sends the result into `Into` and report success.
+
+And for the latter one there are closure functions on some coefficient math - for convenient use with `SendCfnFrom`
+
+Note: Such closures are used where it helps to tighten the implementation of an algorithm,
+in other places computions are intentionally written direct and explicit.
 
 ### [Coefficients](coefficients.go)
 provides special (and non-exported) rational coefficients such a `aZero` or `aOne`.
