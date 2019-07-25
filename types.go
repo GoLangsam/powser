@@ -7,7 +7,7 @@ package ps
 import (
 	"math/big"
 
-	"github.com/GoLangsam/powser/big.dch"
+	"github.com/GoLangsam/powser/dch"
 	// "github.com/GoLangsam/powser/rat"
 	// "github.com/GoLangsam/powser/rat.dch"
 )
@@ -52,7 +52,7 @@ type PS struct {
 
 // New returns a fresh power series.
 func New() PS {
-	return PS{dch.New()}
+	return PS{dch.DchMakeChan()}
 }
 
 // ===========================================================================
