@@ -16,16 +16,10 @@ import (
 
 func main() {
 
-	if n > 0 {
-		sample(n)
-	} else {
-		for i := 1; i <= max; i++ {
-			sample(i)
-		}
-	}
+	doTests()
 
 	if x {
-		fmt.Println("about to leave ...")
+		fmt.Println("about to leave ... are goroutines leaking?")
 		<-time.After(time.Millisecond * 100)
 		os.Exit(1) // to see leaking goroutines, if any
 	}
