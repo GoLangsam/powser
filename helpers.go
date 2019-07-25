@@ -27,8 +27,8 @@ func (U PS) new() PS {
 // Functions which return a CoefficientFunc (as a closure)
 //  - are used with SendCfnFrom to simplify some arithmetic
 //  - help to avoid pitfalls related to accidental re-use of method receivers
-//    (a common 'challenge' when using *big.Rat) 
-type CoefficientFunc func (Coefficient) Coefficient
+//    (a common 'challenge' when using *big.Rat)
+type CoefficientFunc func(Coefficient) Coefficient
 
 // cSame `u`
 func cSame() CoefficientFunc {
