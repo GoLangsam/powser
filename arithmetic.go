@@ -145,11 +145,14 @@ func mul(U, V PS) PS {
 			return
 		}
 
-		Z.Send(cMul(u)(v))                     // `u*v`
-		UU, VV := U.Split(), V.Split()         // `UU`, `VV`
-		W := VV[0].CMul(u).Plus(UU[0].CMul(v)) // `u*VV + v*UU`
-		if Z.SendCfnFrom(W, cSame()) {         // ` + x*(u*VV+v*UU)`
-			Z.Append(W.Plus(UU[1].Times(VV[1]))) // `+ x*x*UU*VV` - recurse
+		Z.Send(cMul(u)(v)) // `u*v`
+
+		US, UM := U.Split()
+		VS, VM := V.Split()
+
+		W := VS.CMul(u).Plus(US.CMul(v)) // `u*VV + v*UU`
+		if Z.SendCfnFrom(W, cSame()) {   // ` + x*(u*VV+v*UU)`
+			Z.Append(W.Plus(mul(UM, VM))) // `+ x*x*UU*VV` - recurse
 		}
 	}(Z, U, V)
 	return Z
@@ -210,12 +213,15 @@ func (U PS) Integ(c Coefficient) PS {
 }
 
 // Recip rocal of a power series. The algorithm is:
+//
 //	let U = `u + x*UU`
 //	let Z = `z + x*ZZ`
+//
 //	`(u+x*UU)*(z+x*ZZ) = 1`
 //	`z = 1/u`
+//
 //	`u*ZZ + z*UU + x*UU*ZZ = 0`
-//  ZZ = `-UU*(z+x*ZZ)/u`
+//
 //	ZZ = `1/u * -UU * (z + x*ZZ)`
 func (U PS) Recip() PS {
 	Z := U.new()
@@ -224,9 +230,9 @@ func (U PS) Recip() PS {
 			ru := cInv()(u)   // ` z = 1/u`
 			mz := cNeg()(ru)  // `-z` minus z
 			Z.Send(cInv()(u)) // ` z = 1/u`
-			ZZ := U.newPair()
-			ZZ.Split(U.CMul(mz).Times(ZZ[0].Shift(ru)))
-			Z.Append(ZZ[1])
+			Z1, Z2 := New(), New()
+			U.CMul(mz).Times(Z1.Shift(ru)).SplitUs(Z1, Z2)
+			Z.Append(Z2)
 		}
 	}(Z, U)
 	return Z
@@ -236,26 +242,30 @@ func (U PS) Recip() PS {
 //	Z = exp(U)
 //	DZ = Z*DU
 //	integrate to get Z
+//
 // Note: The constant term is simply ignored as
 // any nonzero constant term would imply nonrational coefficients.
 func (U PS) Exp() PS {
-	ZZ := U.newPair()
-	ZZ.Split(ZZ[0].Times(U.Deriv()).Integ(aOne()))
-	return ZZ[1]
+	Z1, Z2 := New(), New()
+	Z1.Times(U.Deriv()).Integ(aOne()).SplitUs(Z1, Z2)
+	return Z2
 }
 
 // Subst itute V for x in U, where the constant term of V is zero:
 //	let U = `u + x*UU`
 //	let V = `v + x*VV`
 //	then U.Subst(V) = `u + VV * U.Subst(VV)`
+//
 // Note: Any nonzero constant term of `V` is simply ignored.
 func (U PS) Subst(V PS) PS {
 	Z := U.new()
 	go func(Z PS, U, V PS) {
 		if Z.SendCfnFrom(U, cSame()) {
-			VV := V.Split()
-			VV[0].Get() // Note: Any nonzero constant term of `V` is ignored.
-			Z.Append(VV[0].Times(U.Subst(VV[1])))
+			VA, VS := V.Split()
+			VA.Get() // Note: Any nonzero constant term of `V` is ignored.
+			Z.Append(VA.Times(U.Subst(VS)))
+		} else {
+			V.Drop()
 		}
 	}(Z, U, V)
 	return Z

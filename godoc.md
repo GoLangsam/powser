@@ -175,13 +175,15 @@ func (U PS) Printn(n int)
 func (U PS) Recip() PS
     Recip rocal of a power series. The algorithm is:
 
-    	let U = `u + x*UU`
-    	let Z = `z + x*ZZ`
-    	`(u+x*UU)*(z+x*ZZ) = 1`
-    	`z = 1/u`
-    	`u*ZZ + z*UU + x*UU*ZZ = 0`
-     ZZ = `-UU*(z+x*ZZ)/u`
-    	ZZ = `1/u * -UU * (z + x*ZZ)`
+    let U = `u + x*UU`
+    let Z = `z + x*ZZ`
+
+    `(u+x*UU)*(z+x*ZZ) = 1`
+
+    `z = 1/u`
+    `u*ZZ + z*UU + x*UU*ZZ = 0`
+
+    ZZ = `1/u * -UU * (z + x*ZZ)`
 
 func (Into PS) SendCfnFrom(From PS, cfn CoefficientFunc) (ok bool)
     SendCfnFrom sends into `Into` the result of the CoefficientFunc `cfn`
@@ -195,8 +197,12 @@ func (Into PS) SendCfnFrom(From PS, cfn CoefficientFunc) (ok bool)
 func (U PS) Shift(c Coefficient) PS
     Shift returns `c + x*U`
 
-func (U PS) Split() [2]PS
-    Split returns a pair of power series identical to the given one.
+func (U PS) Split() (PS, PS)
+    Split returns two power series identical to (the current remainder of) the
+    given `from` power series. It's a convenient wrapper around SplitUs.
+
+func (U PS) SplitUs(V, W PS)
+    SplitUs from `from` into two given power series.
 
 func (U PS) Subst(V PS) PS
     Subst itute V for x in U, where the constant term of V is zero:

@@ -76,12 +76,12 @@ func (U PS) Printn(n int) {
 // and concurrently prints up to n terms of it.
 // Useful to inspect formulas as it can be chained.
 func (U PS) Printer(n int) PS {
-	UU := U.Split()
+	UC, UP := U.Split()
 
 	go func(U PS, n int) {
 		U.Printn(n)
-	}(U, n)
-	return UU[1]
+	}(UP, n)
+	return UC
 }
 
 // Print one billion terms. Use at Your own risk ;-)

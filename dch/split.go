@@ -6,11 +6,12 @@ package dch
 
 // ===========================================================================
 
-// Split returns a pair of power series identical to (the current remainder of) a given power series.
-func (from *Dch) Split() [2]*Dch {
-	pair := [2]*Dch{from.New(), from.New()}
-	from.SplitUs(pair[0], pair[1])
-	return pair
+// Split returns two demand channels identical to (the current remainder of) the given `from` channel.
+// It's a convenient wrapper around SplitUs.
+func (from *Dch) Split() (*Dch, *Dch) {
+	into1, into2 := from.New(), from.New()
+	from.SplitUs(into1, into2)
+	return into1, into2
 }
 
 // SplitUs from `from` into two given demand channels.

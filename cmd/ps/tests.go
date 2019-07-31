@@ -37,7 +37,7 @@ func doTests() {
 	} else if n < len(testS) {
 		doTest(n, testS[n+1])
 	} else {
-		panic("n is too large - there are not so many tests" )
+		panic("n is too large - there are not so many tests")
 	}
 }
 

@@ -34,26 +34,19 @@ func (U PS) GetWith(V PS) (cU Coefficient, okU bool, cV Coefficient, okV bool) {
 	return
 }
 
-// Split returns a pair of power series identical to the given one.
-func (U PS) Split() [2]PS {
-	UU := U.newPair()
-	U.Self().SplitUs(UU[0].Self(), UU[1].Self())
-	return UU
-}
-
 // ---------------------------------------------------------------------------
 
-// pairPS represents a pair of power series.
-type pairPS [2]PS
-
-// newPair returns an empty pair of new power series.
-func (U PS) newPair() pairPS {
-	return pairPS{New(), New()}
+// Split returns two power series identical to (the current remainder of) the given `from` power series.
+// It's a convenient wrapper around SplitUs.
+func (U PS) Split() (PS, PS) {
+	S1, S2 := U.Self().Split()
+	into1, into2 := PS{S1}, PS{S2}
+	return into1, into2
 }
 
-// Split `U` into a given pair of power series.
-func (UU pairPS) Split(U PS) {
-	U.Self().SplitUs(UU[0].Self(), UU[1].Self())
+// SplitUs from `from` into two given power series.
+func (U PS) SplitUs(V, W PS) {
+	U.Self().SplitUs(V.Self(), W.Self())
 }
 
 // ===========================================================================

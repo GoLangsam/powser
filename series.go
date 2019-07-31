@@ -151,7 +151,7 @@ func Sincos() (Sin PS, Cos PS) {
 	Cos = New()
 
 	U := OneByFactorial()
-	UU := U.Split()
+	U1, U2 := U.Split()
 
 	f := func(Z PS, U PS, odd bool) {
 		var minus bool
@@ -174,8 +174,8 @@ func Sincos() (Sin PS, Cos PS) {
 		}
 	}
 
-	go f(Sin, UU[0], false)
-	go f(Cos, UU[1], true)
+	go f(Sin, U1, false)
+	go f(Cos, U2, true)
 
 	return
 }
