@@ -184,7 +184,7 @@ func (U PS) Deriv() PS {
 		// constant term: drop
 		// Thus: we must Z.Send() before another Z.Next(),
 		for i := 1; ok; i++ {
-			if u, ok = U.Get(); ok {
+			if u, ok = U.Receive(); ok {
 				Z.Send(cRatIby1(i)(u)) // `u * i`
 				ok = Z.Next()
 			}
@@ -262,7 +262,7 @@ func (U PS) Subst(V PS) PS {
 	go func(Z PS, U, V PS) {
 		if Z.SendCfnFrom(U, cSame()) {
 			VA, VS := V.Split()
-			VA.Get() // Note: Any nonzero constant term of `V` is ignored.
+			VA.Receive() // Note: Any nonzero constant term of `V` is ignored.
 			Z.Append(VA.Times(U.Subst(VS)))
 		} else {
 			V.Drop()

@@ -8,7 +8,7 @@
 
 package dch
 
-type value interface{}
+// type value interface{}
 
 // ===========================================================================
 // Beg of Dch channel object
@@ -19,6 +19,7 @@ type value interface{}
 type Dch struct {
 	req chan struct{}
 ch chan value ;
+	//ne <-chan struct{}
 }
 */
 
@@ -30,6 +31,7 @@ func DchMakeChan() *Dch {
 	d := Dch{
 		req: make(chan struct{}),
 		ch:  make(chan value),
+		//ne: done,
 	}
 	return &d
 }
@@ -43,6 +45,7 @@ func DchMakeBuff(cap int) *Dch {
 	d := Dch{
 		req: make(chan struct{}),
 		ch:  make(chan value, cap),
+		//ne: done,
 	}
 	return &d
 }
@@ -53,10 +56,51 @@ func DchMakeBuff(cap int) *Dch {
 // reports whether a value was received from an open channel
 // or not (as it has been closed).
 //
-// Get blocks until the request is accepted and value `val` has been received from `from`.
+// Get blocks until the request is accepted and value `val` has been received from `from`
+// (or until abort is broadcast).
+//
+// Get includes housekeeping:
+// If `from` has been closed, `from` is dropped.
 func (from *Dch) Get() (val value, open bool) {
-	from.req <- struct{}{}
-	val, open = <-from.ch
+	val, open = from.Receive()
+	if !open {
+		from.Drop()
+	}
+	return
+}
+
+// Receive is the comma-ok multi-valued form to receive from the channel and
+// reports whether a value was received from an open channel
+// or not (as it has been closed).
+//
+// Receive blocks until the request is accepted and value `val` has been received from `from`
+// (or until abort is broadcast).
+//
+// Note: Receive is low-level - its cousin `Get`
+// includes housekeeping: `Get`
+// drops the channel upon nok.
+func (from *Dch) Receive() (val value, open bool) {
+	if from.more() {
+		select {
+		case val, open = <-from.ch:
+			//se <-from.done:
+		}
+	}
+	return
+}
+
+// more issues a request.
+// It blocks until a request is sent
+// (or until abort is broadcast)
+// and reports whether the request was issued.
+//
+// Follow a successful more with receiving one value.
+func (from *Dch) more() (ok bool) {
+	select {
+	case from.req <- struct{}{}:
+		ok = true
+		//se <-from.done:
+	}
 	return
 }
 
@@ -75,10 +119,8 @@ func (from *Dch) Get() (val value, open bool) {
 // Put includes housekeeping:
 // If `into` has been dropped, `into` is closed.
 func (into *Dch) Put(val value) (ok bool) {
-	_, ok = <-into.req
-	if ok {
-		into.ch <- val
-	} else {
+	ok = into.Provide(val)
+	if !ok {
 		into.Close()
 	}
 	return
@@ -94,9 +136,9 @@ func (into *Dch) Put(val value) (ok bool) {
 // Hint: Provide is useful in constructors
 // together with `defer into.Close()`.
 func (into *Dch) Provide(val value) (ok bool) {
-	_, ok = <-into.req
+	ok = into.Next()
 	if ok {
-		into.ch <- val
+		ok = into.Send(val)
 	}
 	return ok
 }
@@ -112,8 +154,9 @@ func (into *Dch) Provide(val value) (ok bool) {
 // If `into` has been dropped or `from` has been closed,
 // `from` is dropped and `into` is closed.
 func (into *Dch) NextGetFrom(from *Dch) (val value, ok bool) {
-	if _, ok = <-into.req; ok { // Next()
-		val, ok = from.Get()
+	ok = into.Next()
+	if ok {
+		val, ok = from.Receive()
 	}
 	if !ok {
 		from.Drop()
@@ -128,13 +171,28 @@ func (into *Dch) NextGetFrom(from *Dch) (val value, ok bool) {
 //
 // A successful Next is to be followed by one Send(v).
 func (into *Dch) Next() (ok bool) {
-	_, ok = <-into.req
+	select {
+	case _, ok = <-into.req:
+		//se <-into.done:
+	}
 	return
 }
 
 // Send is to be used after a successful Next()
-func (into *Dch) Send(val value) {
-	into.ch <- val
+func (into *Dch) Send(val value) (sent bool) {
+	select {
+	case into.ch <- val:
+		sent = true
+		/*
+			case <-into.done:
+				select {
+				case into.ch <- val:
+					sent = true
+				default:
+				}
+		*/
+	}
+	return
 }
 
 // ---------------------------------------------------------------------------

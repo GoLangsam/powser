@@ -179,8 +179,8 @@ func (U PS) Recip() PS
     let Z = `z + x*ZZ`
 
     `(u+x*UU)*(z+x*ZZ) = 1`
-
     `z = 1/u`
+
     `u*ZZ + z*UU + x*UU*ZZ = 0`
 
     ZZ = `1/u * -UU * (z + x*ZZ)`

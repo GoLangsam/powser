@@ -19,7 +19,7 @@ func (into *Dch) Append(from *Dch) {
 // without cleanup of handshaking resources.
 func (into *Dch) append(from *Dch) {
 	for into.Next() {
-		if c, ok := from.Get(); ok {
+		if c, ok := from.Receive(); ok {
 			into.Send(c)
 		} else {
 			return

@@ -207,7 +207,7 @@ func Sec() PS {
 func CscX() PS {
 	U, V := Sincos()
 	V.Drop()
-	U.Get()
+	U.Receive()
 	return U.Recip()
 }
 
@@ -222,7 +222,7 @@ func Tan() PS {
 // as `Cos/(Sin*1/x)`.
 func CotX() PS {
 	U, V := Sincos()
-	U.Get()
+	U.Receive()
 	return V.Times(U.Recip())
 }
 

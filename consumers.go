@@ -21,7 +21,7 @@ import (
 // for up to `n` terms,
 // where `n=1` denotes the first, the constant term.
 func (U PS) EvalAt(c Coefficient, n int) Coefficient {
-	u, ok := U.Get()
+	u, ok := U.Receive()
 	switch {
 	case ok && n == 1:
 		return u
@@ -45,7 +45,7 @@ func (U PS) EvalN(c Coefficient, n int) float64 {
 	var fu float64
 	var ok bool
 	for i := 0; i < n; i++ {
-		if u, ok = U.Get(); !ok {
+		if u, ok = U.Receive(); !ok {
 			break
 		}
 		fu, _ = u.Float64()
@@ -63,7 +63,7 @@ func (U PS) Printn(n int) {
 	var u Coefficient
 	var ok bool
 	for ; n > 0; n-- {
-		if u, ok = U.Get(); !ok {
+		if u, ok = U.Receive(); !ok {
 			break
 		}
 		fmt.Print(u.String())

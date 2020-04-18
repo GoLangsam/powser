@@ -6,6 +6,6 @@
 
 //go:generate -command genny genny -pkg $GOPACKAGE
 
-//go:generate genny	-in ../../pipe/.generate.xx/01-any-mode.go	-out dch.genny		gen "anyThing=value mode=demand anyMode=Dch"
+//go:generate genny	-in ../../pipe/.generate.x/01-any-mode.go	-out dch.genny		gen "anyThing=value mode=demand anyMode=Dch"
 
 package dch

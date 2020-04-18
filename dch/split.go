@@ -66,7 +66,7 @@ func (from *Dch) split(out1, out2 *Dch, wait <-chan struct{}) {
 		}
 	}
 
-	dat, ok := from.Get()
+	dat, ok := from.Receive()
 
 	release := make(chan struct{})
 	if ok && req { // dispatch - as we have data

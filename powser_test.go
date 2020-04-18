@@ -20,7 +20,7 @@ func check(t *testing.T, U PS, c Coefficient, count int, str string) {
 func chk(t *testing.T, U PS, c Coefficient, count int, str string) {
 	for i := 0; i < count; i++ {
 
-		if r, ok := U.Get(); ok {
+		if r, ok := U.Receive(); ok {
 			if !Equal(r, c) {
 				t.Error("got: ", r.String(), "\t should get ", c.String(), "\t ", str)
 			}

@@ -89,7 +89,7 @@ func cInv() func(u Coefficient) Coefficient {
 func (Into PS) SendCfnFrom(From PS, cfn CoefficientFunc) (ok bool) {
 	var c Coefficient
 	if c, ok = Into.NextGetFrom(From); ok {
-		Into.Send(cfn(c))
+		ok = Into.Send(cfn(c))
 	}
 	return
 }
